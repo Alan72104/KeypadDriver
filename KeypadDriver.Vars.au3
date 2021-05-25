@@ -1,7 +1,7 @@
 ; ================================================================================
 ;
 ; KeypadDriver.Vars.au3
-; This file declares the variables required to define the driver key mapping and all other status
+; This file declares the variables required to define the keypad specs and all other status
 ;
 ; ================================================================================
 
