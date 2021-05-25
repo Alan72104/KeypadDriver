@@ -10,7 +10,6 @@
 #include "Include\CommMG.au3"
 #include "Include\LibDebug.au3"
 #include "KeypadDriver.Vars.au3"
-#include "KeypadDriver.Gui.au3"
 
 Global $serial_keyDataNum, $serial_keyDataState, $serial_keyDataReceived = False
 
