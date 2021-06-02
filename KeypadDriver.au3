@@ -1,3 +1,7 @@
+#Region ;**** Directives created by AutoIt3Wrapper_GUI ****
+#AutoIt3Wrapper_Run_Au3Stripper=y
+#Au3Stripper_Parameters=/pe /sf /sv /rm
+#EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ; ================================================================================
 ;
 ; KeypadDriver.au3
