@@ -38,7 +38,7 @@ Global $gui_idComboRgbState, $gui_idButtonRgbUpdate, $gui_idButtonRgbIncreaseBri
 
 Global $gui_idLabelConnection
 
-Global $gui_idButtonClose, $gui_idButtonSave
+Global $gui_idButtonClose, $gui_idButtonSave, $gui_idButtonLoad
 
 Global Enum $gui_UPDATERGBSTATE, $gui_GETRGBDATA, $gui_INCREASERGBBRIGHTNESS, $gui_DECREASERGBBRIGHTNESS
 
@@ -66,6 +66,10 @@ Func HandleMsg()
         ; The "Save to config" button
         Case $gui_idButtonSave
             Return 2
+        
+        ; The "Load config" button
+        Case $gui_idButtonLoad
+            Return 3
         
         ; The binding action selectors
         Case $gui_idRadioBind
@@ -332,7 +336,9 @@ Func OpenGui()
     $gui_idButtonSave = GUICtrlCreateButton("Save to config", 750 - 25 - 150 + 25, _
                                                               500 - 25 - 25 - 25 - 5, _
                                                               100, 25)
-    
+    $gui_idButtonLoad = GUICtrlCreateButton("Load config", 750 - 25 - 150 + 25, _
+                                                           500 - 25 - 25 - 25 - 5 - 25 - 5, _
+                                                           100, 25)
     
     $gui_idLabelConnection = GUICtrlCreateLabel("Not connected, detecting the port...", 50, 500 - 25 - 15, 500, 15)
     

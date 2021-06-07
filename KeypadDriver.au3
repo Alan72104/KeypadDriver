@@ -10,6 +10,7 @@
 ; ================================================================================
 
 #include-once
+#include <FileConstants.au3>
 #include "Include\LibDebug.au3"
 #include "Include\CommMG.au3"
 #include "KeypadDriver.Vars.au3"
@@ -81,6 +82,16 @@ Func Main()
                         Terminate()
                     Case 2
                         ConfigSave($main_configPath)
+                    Case 3
+                        Local $path = FileOpenDialog("Select a ini file", @ScriptDir, "Ini files (*.ini)", $FD_FILEMUSTEXIST + $FD_PATHMUSTEXIST)
+                        If Not @error Then
+                            Local $firstLine = FileReadLine($path)
+                            If Not $firstLine == "[ButtonBindings]" Then
+                                MsgBox($MB_ICONWARNING + $MB_TOPMOST, "KeypadDriver", "Please select a valid KeypadDriver config file!")
+                            Else
+                                ConfigLoad($path)
+                            EndIf
+                        EndIf
                 EndSwitch
             EndIf
                         
