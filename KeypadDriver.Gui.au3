@@ -362,6 +362,14 @@ Func IsMonitoringKeypress()
     Return $gui_monitoringType = $gui_MONITORKEYPRESS
 EndFunc
 
+Func EnableGuiTopmost()
+    WinSetOnTop($gui_hGui, "", 1)
+EndFunc
+
+Func DisableGuiTopmost()
+    WinSetOnTop($gui_hGui, "", 0)
+EndFunc
+
 Func ArrayFind(ByRef $a, $v)
     For $i = 0 To UBound($a) - 1
         If $a[$i] = $v Then

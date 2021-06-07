@@ -83,6 +83,7 @@ Func Main()
                     Case 2
                         ConfigSave($main_configPath)
                     Case 3
+                        DisableGuiTopmost()
                         Local $path = FileOpenDialog("Select a ini file", @ScriptDir, "Ini files (*.ini)", $FD_FILEMUSTEXIST + $FD_PATHMUSTEXIST)
                         If Not @error Then
                             Local $firstLine = FileReadLine($path)
@@ -92,6 +93,7 @@ Func Main()
                                 ConfigLoad($path)
                             EndIf
                         EndIf
+                        EnableGuiTopmost()
                 EndSwitch
             EndIf
                         
