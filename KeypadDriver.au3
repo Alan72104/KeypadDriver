@@ -23,7 +23,7 @@ Global Const $main_scansPerSec = 1000
 Global Const $main_msPerScan = 1000 / $main_scansPerSec
 Global $main_loopPeriod, $main_loopStartTime, $main_timer
 Global $main_timerRetrying
-Global $main_slowPolling = False, $main_pollingTimer, $main_pollingReceivedTimer
+Global $main_pollingReceivedTimer
 	
 SetGuiOpeningKey("{F4}")
 Opt("GUICloseOnESC", 0)
@@ -61,22 +61,17 @@ Func Main()
                 Connect()
             EndIf
         
-            If ($main_slowPolling ? TimerDiff($main_pollingTimer) >= 100 : True) Then
-                $main_pollingTimer = TimerInit()
+            PollKeys()
+            If IsKeyDataReceived() Then
+                $main_pollingReceivedTimer = TimerInit()
 
-                PollKeys()
-                If IsKeyDataReceived() Then
-                    $main_pollingReceivedTimer = TimerInit()
-                    $main_slowPolling = False
-
-                    ; c("Button: $ pressed, state: $", 1, $_pressedBtnNum, $_pressedBtnState)
-                    If Not IsGuiOpened() Then
-                        SendKey(GetKeyDataNum(), GetKeyDataState())
-                    EndIf
-                    
-                ElseIf TimerDiff($main_pollingReceivedTimer) >= 15000 Then
-                    $main_slowPolling = True
+                ; c("Button: $ pressed, state: $", 1, $_pressedBtnNum, $_pressedBtnState)
+                If Not IsGuiOpened() Then
+                    SendKey(GetKeyDataNum(), GetKeyDataState())
                 EndIf
+                
+            ElseIf Not IsGuiOpened() And TimerDiff($main_pollingReceivedTimer) >= 15000 Then
+                Sleep(100)
             EndIf
             
             If IsGuiOpened() Then
