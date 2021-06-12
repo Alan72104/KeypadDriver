@@ -341,8 +341,12 @@ Func OpenGui()
                                                            100, 25)
     
     $gui_idLabelConnection = GUICtrlCreateLabel("Not connected, detecting the port...", 50, 500 - 25 - 15, 500, 15)
+
+    ; Reset the states
+    $gui_bindingAction = $gui_BIND
+    $gui_monitoringType = $gui_MONITORRGB
     
-    ; Shows the gui
+    ; Show the gui
     GUISetState(@SW_SHOW)
     
     $gui_timerGuiBtnRgbSync = TimerInit()
