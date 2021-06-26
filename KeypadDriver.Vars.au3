@@ -12,7 +12,7 @@ Global Const $WIDTH = 4, $HEIGHT = 3
 ; Available rgb states on the keypad
 Global $rgbStates = ["Rainbow", _
                      "StaticRainbow", _
-                     "SpreadOut", _
+                     "Splash", _
                      "StaticLight", _
                      "Breathing", _
                      "FractionalDrawingTest2d", _
