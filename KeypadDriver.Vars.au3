@@ -23,6 +23,7 @@ Global $rgbStates = ["Rainbow", _
                      "Raindrop", _
                      "Snake", _
                      "ShootingParticles", _
+                     "Fire", _
                      "WhacAMole", _
                      "TicTacToe", _
                      "BullsNCows"]
