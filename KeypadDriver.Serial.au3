@@ -90,25 +90,26 @@ Func PollData()
     EndIf
 EndFunc
 
-; This function sends a message byte to the keypad
+; This function sends a message to the keypad
 Func SendMsgToKeypad($type, $data)
     If $connectionStatus <> $CONNECTED Then Return
     
-    ; Message byte - |first 2 bits for msg type, last 6 bits for msg data|
-    If $type > 3 Then
+    ; Message - |1 byte for msg type, 1 byte for msg data|
+    If $type > 0xFF Then
         MsgBox($MB_ICONWARNING + $MB_TOPMOST, "KeypadDriver", "Exception catched ""SendMsgToKeypad()""" & @CRLF & @CRLF & _
-                                                              "Message type cannot be larger than 2 bits! Type: " & $type & @CRLF & @CRLF & _
+                                                              "Message type cannot be larger than 1 byte! Type: " & $type & @CRLF & @CRLF & _
                                                               "Message not sent!")
         Return
     EndIf
-    If $data > 63 Then
+    If $data > 0xFF Then
         MsgBox($MB_ICONWARNING + $MB_TOPMOST, "KeypadDriver", "Exception catched ""SendMsgToKeypad()""" & @CRLF & @CRLF & _
-                                                              "Data to send cannot be larger than 2 bits! Data: " & $data & @CRLF & @CRLF & _
+                                                              "Data to send cannot be larger than 1 byte! Data: " & $data & @CRLF & @CRLF & _
                                                               "Message not sent!")
         Return
     EndIf
 
-    _CommSendByte(BitShift($type, -6) + $data)
+    _CommSendByte($type)
+    _CommSendByte($data)
 EndFunc
 
 Func GetComPort()
