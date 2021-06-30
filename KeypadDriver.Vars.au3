@@ -35,3 +35,6 @@ Global $connectionStatus = $NOTCONNECTED
 ; Global variables for possible keystroke states
 Global Enum $KEYSTROKEUP, $KEYSTROKEDOWN
 Global $keyStrokeAmount = 2
+
+; Global variables for driver-to-keypad messages
+Global Enum $MSG_UPDATERGBSTATE, $MSG_GETRGBDATA, $MSG_INCREASERGBBRIGHTNESS, $MSG_DECREASERGBBRIGHTNESS, $MSG_INCREASEEFFECTSPEED, $MSG_DECREASEEFFECTSPEED

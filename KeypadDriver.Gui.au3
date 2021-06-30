@@ -94,19 +94,19 @@ Func HandleMsg()
         
         ; The rgb "Update" button
         Case $gui_idButtonRgbUpdate
-            SendMsgToKeypad($gui_UPDATERGBSTATE, ArrayFind($rgbStates, GUICtrlRead($gui_idComboRgbState)))
+            SendMsgToKeypad($MSG_UPDATERGBSTATE, ArrayFind($rgbStates, GUICtrlRead($gui_idComboRgbState)))
         
         ; The rgb brightness control buttons
         Case $gui_idButtonRgbIncreaseBrightness
-            SendMsgToKeypad($gui_INCREASERGBBRIGHTNESS, 0)
+            SendMsgToKeypad($MSG_INCREASERGBBRIGHTNESS, 0)
         Case $gui_idButtonRgbDecreaseBrightness
-            SendMsgToKeypad($gui_DECREASERGBBRIGHTNESS, 0)
+            SendMsgToKeypad($MSG_DECREASERGBBRIGHTNESS, 0)
 
         ; The effect speed control buttons
         Case $gui_idButtonEffectIncreaseSpeed
-            SendMsgToKeypad($gui_INCREASEEFFECTSPEED, 0)
+            SendMsgToKeypad($MSG_INCREASEEFFECTSPEED, 0)
         Case $gui_idButtonEffectDecreaseSpeed
-            SendMsgToKeypad($gui_DECREASEEFFECTSPEED, 0)
+            SendMsgToKeypad($MSG_DECREASEEFFECTSPEED, 0)
         
         ; Manually handle the other messages
         Case Else
@@ -175,7 +175,7 @@ Func SyncGuiRgb()
         
         ; Clear the serial input buffer in case there are still some scrapped bytes
         _CommClearInputBuffer()
-        SendMsgToKeypad($gui_GETRGBDATA, 0)
+        SendMsgToKeypad($MSG_GETRGBDATA, 0)
         $gui_syncingButtonIndex = 0
         $gui_syncingRgbIndex = 0
         $timer = TimerInit()
