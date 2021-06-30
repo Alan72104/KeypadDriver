@@ -34,13 +34,13 @@ Global Enum $gui_MONITORRGB, $gui_MONITORKEYPRESS
 Global $gui_monitoringType = $gui_MONITORRGB
 Global $gui_idRadioMonitorRgb, $gui_idRadioMonitorKeypress
 
-Global $gui_idComboRgbState, $gui_idButtonRgbUpdate, $gui_idButtonRgbIncreaseBrightness, $gui_idButtonRgbDecreaseBrightness
+Global $gui_idComboRgbState, $gui_idButtonRgbUpdate, $gui_idButtonRgbIncreaseBrightness, $gui_idButtonRgbDecreaseBrightness, $gui_idButtonEffectIncreaseSpeed, $gui_idButtonEffectDecreaseSpeed
 
 Global $gui_idLabelConnection
 
 Global $gui_idButtonClose, $gui_idButtonSave, $gui_idButtonLoad
 
-Global Enum $gui_UPDATERGBSTATE, $gui_GETRGBDATA, $gui_INCREASERGBBRIGHTNESS, $gui_DECREASERGBBRIGHTNESS
+Global Enum $gui_UPDATERGBSTATE, $gui_GETRGBDATA, $gui_INCREASERGBBRIGHTNESS, $gui_DECREASERGBBRIGHTNESS, $gui_INCREASEEFFECTSPEED, $gui_DECREASEEFFECTSPEED
 
 Global $gui_timerGuiBtnRgbSync
 Global $gui_syncingButtonIndex = 0
@@ -101,6 +101,12 @@ Func HandleMsg()
             SendMsgToKeypad($gui_INCREASERGBBRIGHTNESS, 0)
         Case $gui_idButtonRgbDecreaseBrightness
             SendMsgToKeypad($gui_DECREASERGBBRIGHTNESS, 0)
+
+        ; The effect speed control buttons
+        Case $gui_idButtonEffectIncreaseSpeed
+            SendMsgToKeypad($gui_INCREASEEFFECTSPEED, 0)
+        Case $gui_idButtonEffectDecreaseSpeed
+            SendMsgToKeypad($gui_DECREASEEFFECTSPEED, 0)
         
         ; Manually handle the other messages
         Case Else
@@ -267,13 +273,33 @@ Func OpenGui()
     
     ; vvvvvvvvvvvvvvvvvvvvvvvvv Group rgb controls vvvvvvvvvvvvvvvvvvvvvvvvv
     GUICtrlCreateGroup("RGB Controls", 50, (30 + 15 + 60 + 85 * 2 + 15) + 15, _
-                                           15 + 150 + 15, _
+                                           15 + 150 + 15 + 55 + (5 + 15) * 2 + 15, _
                                            15 + 25 + 8 + 25 + 15)
-        $gui_idComboRgbState = GUICtrlCreateCombo("staticLight", 50 + 15, (30 + 15 + 60 + 85 * 2 + 15) + 15 + 15, 150, 25)
+        $gui_idComboRgbState = GUICtrlCreateCombo("staticLight", 50 + 15, _
+                                                                 (30 + 15 + 60 + 85 * 2 + 15) + 15 + 15, _
+                                                                 150, 30)
             GUICtrlSetData($gui_idComboRgbState, _ArrayToString($rgbStates, "|", 1))
-        $gui_idButtonRgbUpdate = GUICtrlCreateButton("Update", 50 + 15, (30 + 15 + 60 + 85 * 2 + 15) + 15 + 15 + 25 + 8, 100, 25)
-        $gui_idButtonRgbIncreaseBrightness = GUICtrlCreateButton("+", 50 + 15 + 100 + 10 , (30 + 15 + 60 + 85 * 2 + 15) + 15 + 15 + 25 + 8, 15, 25)
-        $gui_idButtonRgbDecreaseBrightness = GUICtrlCreateButton("-", 50 + 15 + 100 + 10 + 15 + 10, (30 + 15 + 60 + 85 * 2 + 15) + 15 + 15 + 25 + 8, 15, 25)
+        $gui_idButtonRgbUpdate = GUICtrlCreateButton("Update", 50 + 15, _
+                                                               (30 + 15 + 60 + 85 * 2 + 15) + 15 + 15 + 25 + 8, _
+                                                               150, 25)
+        GUICtrlCreateLabel("Brightness:", 50 + 15 + 150 + 15, _
+                                          (30 + 15 + 60 + 85 * 2 + 15) + 15 + 15 + 3, _
+                                          55, 15)
+        $gui_idButtonRgbIncreaseBrightness = GUICtrlCreateButton("+", 50 + 15 + 150 + 15 + 55 + 5, _
+                                                                      (30 + 15 + 60 + 85 * 2 + 15) + 15 + 15, _
+                                                                      15, 25)
+        $gui_idButtonRgbDecreaseBrightness = GUICtrlCreateButton("-", 50 + 15 + 150 + 15 + 55 + 5 + 15 + 10, _
+                                                                      (30 + 15 + 60 + 85 * 2 + 15) + 15 + 15, _
+                                                                      15, 25)
+        GUICtrlCreateLabel("Speed:", 50 + 15 + 150 + 15, _
+                                          (30 + 15 + 60 + 85 * 2 + 15) + 15 + 15 + 25 + 8 + 3, _
+                                          55, 15)
+        $gui_idButtonEffectIncreaseSpeed = GUICtrlCreateButton("+", 50 + 15 + 150 + 15 + 55 + 5, _
+                                                                    (30 + 15 + 60 + 85 * 2 + 15) + 15 + 15 + 25 + 8, _
+                                                                    15, 25)
+        $gui_idButtonEffectDecreaseSpeed = GUICtrlCreateButton("-", 50 + 15 + 150 + 15 + 55 + 5 + 15 + 10, _
+                                                                    (30 + 15 + 60 + 85 * 2 + 15) + 15 + 15 + 25 + 8, _
+                                                                    15, 25)
     GUICtrlCreateGroup("", -99, -99, 1, 1)
     ; ^^^^^^^^^^^^^^^^^^^^^^^^^ Group rgb controls ^^^^^^^^^^^^^^^^^^^^^^^^^
 
