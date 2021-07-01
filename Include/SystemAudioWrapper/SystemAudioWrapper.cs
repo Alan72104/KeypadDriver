@@ -11,7 +11,7 @@ namespace SystemAudioWrapper
     {
         private WasapiLoopbackCapture capture;
         private BufferedWaveProvider buffer;
-        private int BUFFERSIZE = (int)Math.Pow(2, 11);
+        private int BUFFERSIZE = 4096;
 
         public SystemAudioBassLevel()
         {
@@ -65,9 +65,9 @@ namespace SystemAudioWrapper
             Array.Copy(fft, realFft, realFft.Length);
 
             double sumBass = 0.0;
-            for (int i = 1 - 1; i < 5; i++)
+            for (int i = 2 - 1; i < 5; i++)
                 sumBass += realFft[i];
-            sumBass /= 5 - (1 - 1);
+            sumBass /= 5 - (2 - 1);
 
             return (float)sumBass;
         }
