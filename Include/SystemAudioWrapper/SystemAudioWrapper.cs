@@ -11,15 +11,22 @@ namespace SystemAudioWrapper
     {
         private WasapiLoopbackCapture capture;
         private BufferedWaveProvider buffer;
-        private int BUFFERSIZE = 4096;
+        private int bufferSize;
+        private int startPoint;
+        private int endPoint;
 
-        public SystemAudioBassLevel()
+        public SystemAudioBassLevel() { }
+
+        public void Start(int bufferSize, int startPoint, int endPoint)
         {
+            this.bufferSize = bufferSize;
+            this.startPoint = startPoint;
+            this.endPoint = endPoint;
             capture = new WasapiLoopbackCapture();
             capture.DataAvailable += OnDataAvailable;
             buffer = new BufferedWaveProvider(capture.WaveFormat)
             {
-                BufferLength = BUFFERSIZE * 2,
+                BufferLength = bufferSize * 2,
                 DiscardOnBufferOverflow = true
             };
             capture.StartRecording();
@@ -30,9 +37,9 @@ namespace SystemAudioWrapper
             buffer.AddSamples(e.Buffer, 0, e.BytesRecorded);
         }
 
-        public float GetBassLevel()
+        public int GetBassLevel()
         {
-            int frameSize = BUFFERSIZE;
+            int frameSize = bufferSize;
             byte[] audioBytes = new byte[frameSize];
             buffer.Read(audioBytes, 0, frameSize);
 
@@ -65,11 +72,11 @@ namespace SystemAudioWrapper
             Array.Copy(fft, realFft, realFft.Length);
 
             double sumBass = 0.0;
-            for (int i = 2 - 1; i < 5; i++)
+            for (int i = startPoint - 1; i < endPoint; i++)
                 sumBass += realFft[i];
-            sumBass /= 5 - (2 - 1);
+            sumBass /= endPoint - (startPoint - 1);
 
-            return (float)sumBass;
+            return (int)sumBass;
         }
 
         private double[] FFT(double[] data)
