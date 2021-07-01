@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30907.101
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SystemAudioWrapper", "SystemAudioWrapper.csproj", "{123684D5-F4B8-4919-A6A9-459BBC64C2AE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{123684D5-F4B8-4919-A6A9-459BBC64C2AE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{123684D5-F4B8-4919-A6A9-459BBC64C2AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{123684D5-F4B8-4919-A6A9-459BBC64C2AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{123684D5-F4B8-4919-A6A9-459BBC64C2AE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {77F185D8-9134-430F-883D-13FFFC61CE26}
+	EndGlobalSection
+EndGlobal

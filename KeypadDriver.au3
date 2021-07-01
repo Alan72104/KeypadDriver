@@ -9,10 +9,12 @@
 ;
 ; ================================================================================
 
+#RequireAdmin
 #include-once
 #include <FileConstants.au3>
 #include "Include\LibDebug.au3"
 #include "Include\CommMG.au3"
+#include "Include\DotNetDLLWrapper.au3"
 #include "KeypadDriver.Vars.au3"
 #include "KeypadDriver.Gui.au3"
 #include "KeypadDriver.Serial.au3"
@@ -24,7 +26,8 @@ Global Const $main_msPerScan = 1000 / $main_scansPerSec
 Global $main_loopPeriod, $main_loopStartTime, $main_timer
 Global $main_timerRetrying
 Global $main_pollingReceivedTimer
-	
+Global $main_oBassLevel, $main_audioSyncTimer, $main_cap
+
 SetGuiOpeningKey("{F4}")
 Opt("GUICloseOnESC", 0)
 
@@ -49,6 +52,20 @@ Func Main()
     Sleep(200)
     OpenGui()
     Connect()
+    If Not _DotNet_Load("Include\Dll\SystemAudioWrapper.dll") Then
+        MsgBox($MB_ICONWARNING + $MB_TOPMOST, "KeypadDriver", "Exception catched ""Main()""" & @CRLF & @CRLF & _
+                                                              "Loading SystemAudioWrapper.dll failed! error: " & @error & @CRLF & @CRLF & _
+                                                              "Terminating!")
+        Terminate()
+    EndIf
+    $main_oBassLevel = ObjCreate("SystemAudioWrapper.SystemAudioBassLevel")
+    If @error Then
+        MsgBox($MB_ICONWARNING + $MB_TOPMOST, "KeypadDriver", "Exception catched ""Main()""" & @CRLF & @CRLF & _
+                                                              "Initializing SystemAudioBassLevel failed! error: " & @error & @CRLF & @CRLF & _
+                                                              "Terminating!")
+        Terminate()
+    EndIf
+
     ; Local $t = 0
     ; Local $tt = 0
     While 1
@@ -64,14 +81,22 @@ Func Main()
             PollKeys()
             If IsKeyDataReceived() Then
                 $main_pollingReceivedTimer = TimerInit()
-
                 ; c("Button: $ pressed, state: $", 1, $_pressedBtnNum, $_pressedBtnState)
                 If Not IsGuiOpened() Then
                     SendKey(GetKeyDataNum(), GetKeyDataState())
                 EndIf
-                
             ElseIf Not IsGuiOpened() And TimerDiff($main_pollingReceivedTimer) >= 15000 Then
-                Sleep(100)
+                ;~ Sleep(100)
+            EndIf
+
+            If TimerDiff($main_audioSyncTimer) >= 1000 / 60 And $connectionStatus = $CONNECTED Then
+                $main_audioSyncTimer = TimerInit()
+	            Local $currentAudioLevel = Max($main_oBassLevel.GetBassLevel(), 0) * 100 - 100
+                If $currentAudioLevel > $main_cap Then $main_cap = $currentAudioLevel
+                If $currentAudioLevel > 0 Then
+                    ;~ SendMsgToKeypad($MSG_SETRGBBRIGHTNESS, Int(Max($currentAudioLevel - 150, 0) * (255 / ($main_cap))))
+                    SendMsgToKeypad($MSG_SETRGBBRIGHTNESS, Int($currentAudioLevel * (255 / ($main_cap * 2))))
+                EndIf
             EndIf
             
             If IsGuiOpened() Then
@@ -123,6 +148,10 @@ Func Main()
 EndFunc
 
 Main()
+
+Func Max($iNum1, $iNum2)
+	Return ($iNum1 > $iNum2) ? $iNum1 : $iNum2
+EndFunc
 
 Func Terminate()
     Exit
