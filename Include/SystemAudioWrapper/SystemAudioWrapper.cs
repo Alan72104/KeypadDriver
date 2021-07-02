@@ -1,8 +1,11 @@
 ﻿using System;
-using System.Numerics;
+//using System.Numerics;
 using System.Runtime.InteropServices;
-using Accord.Math;
+//using Accord.Math;
 using NAudio.Wave;
+using NAudio.Dsp;
+using System.IO;
+using NAudio.Wave.SampleProviders;
 
 namespace SystemAudioWrapper
 {
@@ -10,10 +13,12 @@ namespace SystemAudioWrapper
     public class SystemAudioBassLevel
     {
         private WasapiLoopbackCapture capture;
+        private WaveFormat waveFormat;
         private BufferedWaveProvider buffer;
         private int bufferSize;
         private int startPoint;
         private int endPoint;
+        private int lastBassLevel;
 
         public SystemAudioBassLevel() { }
 
@@ -24,7 +29,8 @@ namespace SystemAudioWrapper
             this.endPoint = endPoint;
             capture = new WasapiLoopbackCapture();
             capture.DataAvailable += OnDataAvailable;
-            buffer = new BufferedWaveProvider(capture.WaveFormat)
+            waveFormat = capture.WaveFormat;
+            buffer = new BufferedWaveProvider(waveFormat)
             {
                 BufferLength = bufferSize * 2,
                 DiscardOnBufferOverflow = true
@@ -39,56 +45,94 @@ namespace SystemAudioWrapper
 
         public int GetBassLevel()
         {
+            double[] fft = GetFFTArray();
+            if (fft == null)
+                return lastBassLevel;
+
+            double sum = 0.0;
+
+            for (int i = startPoint - 1; i < endPoint; i++)
+                sum += fft[i];
+            sum /= endPoint - (startPoint - 1);
+
+            lastBassLevel = (int)sum;
+            return (int)sum;
+        }
+
+        public double[] GetFFTArray()
+        {
             int frameSize = bufferSize;
             byte[] audioBytes = new byte[frameSize];
             buffer.Read(audioBytes, 0, frameSize);
 
             if (audioBytes.Length == 0)
-                return 0;
+                return null;
             if (audioBytes[frameSize - 2] == 0)
-                return 0;
+                return null;
+
+            audioBytes = ToPCM16(audioBytes, frameSize, waveFormat);
 
             // incoming data is 16-bit (2 bytes per audio point)
             int BYTES_PER_POINT = 2;
-            // create a (32-bit) int array ready to fill with the 16-bit data
-            int graphPointCount = audioBytes.Length / BYTES_PER_POINT;
+            int pointCount = audioBytes.Length / BYTES_PER_POINT;
 
-            double[] pcm = new double[graphPointCount];
-            double[] fft;
-            double[] realFft = new double[graphPointCount / 2];
+            double[] pcm = new double[pointCount];
+
+            Complex[] fft = new Complex[pointCount];
 
             // populate Xs and Ys with double data
-            for (int i = 0; i < graphPointCount; i++)
+            for (int i = 0; i < pointCount; i++)
             {
                 // read the int16 from the two bytes
                 Int16 val = BitConverter.ToInt16(audioBytes, i * 2);
-
                 // store the value in Ys as a percent (+/- 100% = 200%)
-                pcm[i] = (double)(val) / Math.Pow(2, 16) * 200.0;
+                pcm[i] = (double)val / Math.Pow(2, 16) * 200.0;
+                fft[i].X = (float)(pcm[i] * FastFourierTransform.HannWindow(i, pointCount));
+                fft[i].Y = 0;
             }
 
-            // calculate the full FFT
-            fft = FFT(pcm);
-            Array.Copy(fft, realFft, realFft.Length);
+            // transform/calculate the full FFT
+            FastFourierTransform.FFT(true, (int)Math.Log(pointCount, 2.0), fft);
 
-            double sumBass = 0.0;
-            for (int i = startPoint - 1; i < endPoint; i++)
-                sumBass += realFft[i];
-            sumBass /= endPoint - (startPoint - 1);
+            double[] spectrum = new double[pointCount / 2];
 
-            return (int)sumBass;
+            for (int i = 0; i < pointCount / 2; i++)
+            {
+                double magnitude = Math.Sqrt(fft[i].X * fft[i].X + fft[i].Y * fft[i].Y);
+                spectrum[i] = magnitude;
+            }
+
+            return spectrum;
         }
 
-        private double[] FFT(double[] data)
+        public byte[] ToPCM16(byte[] inputBuffer, int length, WaveFormat format)
         {
-            double[] fft = new double[data.Length];
-            Complex[] fftComplex = new Complex[data.Length];
-            for (int i = 0; i < data.Length; i++)
-                fftComplex[i] = new Complex(data[i], 0.0);
-            FourierTransform.FFT(fftComplex, FourierTransform.Direction.Forward);
-            for (int i = 0; i < data.Length; i++)
-                fft[i] = fftComplex[i].Magnitude;
-            return fft;
+            if (length == 0)
+                return null; // No bytes recorded
+
+            // Create a WaveStream from the input buffer.
+            using (var memStream = new MemoryStream(inputBuffer, 0, length))
+            {
+                using (var inputStream = new RawSourceWaveStream(memStream, format))
+                {
+                    // Convert the input stream to a WaveProvider in 16bit PCM format with sample rate of 48000 Hz.
+                    SampleToWaveProvider16 convertedPCM = new SampleToWaveProvider16(new WdlResamplingSampleProvider(new WaveToSampleProvider(inputStream), 48000));
+
+                    byte[] convertedBuffer = new byte[length];
+
+                    using (var stream = new MemoryStream())
+                    {
+                        int read;
+
+                        // Read the converted WaveProvider into a buffer and turn it into a Stream.
+                        while ((read = convertedPCM.Read(convertedBuffer, 0, length)) > 0)
+                            stream.Write(convertedBuffer, 0, read);
+
+                        // Return the converted Stream as a byte array.
+                        return stream.ToArray();
+                    }
+                }
+            }
         }
     }
 }

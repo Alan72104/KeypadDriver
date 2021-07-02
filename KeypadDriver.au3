@@ -26,7 +26,7 @@ Global Const $main_msPerScan = 1000 / $main_scansPerSec
 Global $main_loopPeriod, $main_loopStartTime, $main_timer
 Global $main_timerRetrying
 Global $main_pollingReceivedTimer
-Global Const $main_audioSyncEnable = False
+Global Const $main_audioSyncEnable = True
 Global $main_oBassLevel, $main_audioSyncTimer, $main_bassLevelCap
 
 SetGuiOpeningKey("{F4}")
@@ -67,7 +67,7 @@ Func Main()
                                                                 "Terminating!")
             Terminate()
         EndIf
-        $main_oBassLevel.Start(2048, 1, 10)
+        $main_oBassLevel.Start(4096, 1, 8)
     EndIf
 
     ; Local $t = 0
@@ -95,11 +95,9 @@ Func Main()
 
             If $main_audioSyncEnable And TimerDiff($main_audioSyncTimer) >= 1000 / 60 And $connectionStatus = $CONNECTED Then
                 $main_audioSyncTimer = TimerInit()
-	            Local $currentAudioLevel = Max($main_oBassLevel.GetBassLevel(), 0) * 100 - 100
+	            Local $currentAudioLevel = $main_oBassLevel.GetBassLevel() * 100
                 If $currentAudioLevel > $main_bassLevelCap Then $main_bassLevelCap = $currentAudioLevel
-                If $currentAudioLevel > 0 Then
-                    SendMsgToKeypad($MSG_SETRGBBRIGHTNESS, Int($currentAudioLevel * ((255 / 4 * 3) / ($main_bassLevelCap * 2))))
-                EndIf
+                SendMsgToKeypad($MSG_SETRGBBRIGHTNESS, Int($currentAudioLevel * ((255 * 2 / 4) / $main_bassLevelCap)))
             EndIf
             
             If IsGuiOpened() Then
