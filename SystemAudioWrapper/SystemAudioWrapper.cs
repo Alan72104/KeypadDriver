@@ -1,10 +1,8 @@
 ﻿using System;
-//using System.Numerics;
-using System.Runtime.InteropServices;
-//using Accord.Math;
-using NAudio.Wave;
-using NAudio.Dsp;
 using System.IO;
+using System.Runtime.InteropServices;
+using NAudio.Dsp;
+using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 
 namespace SystemAudioWrapper
