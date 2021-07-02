@@ -95,7 +95,7 @@ Func Main()
 
             If $main_audioSyncEnable And TimerDiff($main_audioSyncTimer) >= 1000 / 60 And $connectionStatus = $CONNECTED Then
                 $main_audioSyncTimer = TimerInit()
-	            Local $currentAudioLevel = $main_oBassLevel.GetBassLevel() * 100
+	            Local $currentAudioLevel = $main_oBassLevel.GetBassLevel() * 50
                 If $currentAudioLevel > $main_bassLevelCap Then $main_bassLevelCap = $currentAudioLevel
                 SendMsgToKeypad($MSG_SETRGBBRIGHTNESS, Int($currentAudioLevel * ((255 * 2 / 4) / $main_bassLevelCap)))
             EndIf
