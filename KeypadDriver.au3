@@ -67,7 +67,7 @@ Func Main()
                                                                 "Terminating!")
             Terminate()
         EndIf
-        $main_oBassLevel.Start(4096, 1, 8)
+        $main_oBassLevel.Start(4096, 2, 4)
     EndIf
 
     ; Local $t = 0

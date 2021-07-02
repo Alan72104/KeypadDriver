@@ -1,7 +1,7 @@
 *.ini
 KeypadDriver_stripped.au3
 KeypadDriver.exe
-Include/SystemAudioWrapper/.vs/
-Include/SystemAudioWrapper/bin/
-Include/SystemAudioWrapper/obj/
-Include/SystemAudioWrapper/packages/
+SystemAudioWrapper/.vs/
+SystemAudioWrapper/bin/
+SystemAudioWrapper/obj/
+SystemAudioWrapper/packages/

@@ -18,7 +18,7 @@ namespace SystemAudioWrapper
         private int bufferSize;
         private int startPoint;
         private int endPoint;
-        private int lastBassLevel;
+        private float lastBassLevel;
 
         public SystemAudioBassLevel() { }
 
@@ -43,7 +43,7 @@ namespace SystemAudioWrapper
             buffer.AddSamples(e.Buffer, 0, e.BytesRecorded);
         }
 
-        public int GetBassLevel()
+        public float GetBassLevel()
         {
             double[] fft = GetFFTArray();
             if (fft == null)
@@ -55,8 +55,8 @@ namespace SystemAudioWrapper
                 sum += fft[i];
             sum /= endPoint - (startPoint - 1);
 
-            lastBassLevel = (int)sum;
-            return (int)sum;
+            lastBassLevel = (float)sum;
+            return (float)sum;
         }
 
         public double[] GetFFTArray()
