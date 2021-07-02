@@ -26,7 +26,8 @@ Global Const $main_msPerScan = 1000 / $main_scansPerSec
 Global $main_loopPeriod, $main_loopStartTime, $main_timer
 Global $main_timerRetrying
 Global $main_pollingReceivedTimer
-Global $main_oBassLevel, $main_audioSyncTimer, $main_cap
+Global Const $main_audioSyncEnable = False
+Global $main_oBassLevel, $main_audioSyncTimer, $main_bassLevelCap
 
 SetGuiOpeningKey("{F4}")
 Opt("GUICloseOnESC", 0)
@@ -52,20 +53,22 @@ Func Main()
     Sleep(200)
     OpenGui()
     Connect()
-    If Not _DotNet_Load("Include\Dll\SystemAudioWrapper.dll") Then
-        MsgBox($MB_ICONWARNING + $MB_TOPMOST, "KeypadDriver", "Exception catched ""Main()""" & @CRLF & @CRLF & _
-                                                              "Loading SystemAudioWrapper.dll failed! error: " & @error & @CRLF & @CRLF & _
-                                                              "Terminating!")
-        Terminate()
+    If $main_audioSyncEnable Then
+        If Not _DotNet_Load(@ScriptDir & "\Include\Dll\SystemAudioWrapper.dll") Then
+            MsgBox($MB_ICONWARNING + $MB_TOPMOST, "KeypadDriver", "Exception catched ""Main()""" & @CRLF & @CRLF & _
+                                                                "Loading SystemAudioWrapper.dll failed! error: " & @error & @CRLF & @CRLF & _
+                                                                "Terminating!")
+            Terminate()
+        EndIf
+        $main_oBassLevel = ObjCreate("SystemAudioWrapper.SystemAudioBassLevel")
+        If @error Then
+            MsgBox($MB_ICONWARNING + $MB_TOPMOST, "KeypadDriver", "Exception catched ""Main()""" & @CRLF & @CRLF & _
+                                                                "Initializing SystemAudioBassLevel failed! error: " & @error & @CRLF & @CRLF & _
+                                                                "Terminating!")
+            Terminate()
+        EndIf
+        $main_oBassLevel.Start(2048, 1, 10)
     EndIf
-    $main_oBassLevel = ObjCreate("SystemAudioWrapper.SystemAudioBassLevel")
-    If @error Then
-        MsgBox($MB_ICONWARNING + $MB_TOPMOST, "KeypadDriver", "Exception catched ""Main()""" & @CRLF & @CRLF & _
-                                                              "Initializing SystemAudioBassLevel failed! error: " & @error & @CRLF & @CRLF & _
-                                                              "Terminating!")
-        Terminate()
-    EndIf
-    $main_oBassLevel.Start(2048, 1, 10)
 
     ; Local $t = 0
     ; Local $tt = 0
@@ -87,16 +90,15 @@ Func Main()
                     SendKey(GetKeyDataNum(), GetKeyDataState())
                 EndIf
             ElseIf Not IsGuiOpened() And TimerDiff($main_pollingReceivedTimer) >= 15000 Then
-                ;~ Sleep(100)
+                If Not $main_audioSyncEnable Then Sleep(100)
             EndIf
 
-            If TimerDiff($main_audioSyncTimer) >= 1000 / 60 And $connectionStatus = $CONNECTED Then
+            If $main_audioSyncEnable And TimerDiff($main_audioSyncTimer) >= 1000 / 60 And $connectionStatus = $CONNECTED Then
                 $main_audioSyncTimer = TimerInit()
 	            Local $currentAudioLevel = Max($main_oBassLevel.GetBassLevel(), 0) * 100 - 100
-                If $currentAudioLevel > $main_cap Then $main_cap = $currentAudioLevel
+                If $currentAudioLevel > $main_bassLevelCap Then $main_bassLevelCap = $currentAudioLevel
                 If $currentAudioLevel > 0 Then
-                    ;~ SendMsgToKeypad($MSG_SETRGBBRIGHTNESS, Int(Max($currentAudioLevel - 150, 0) * (255 / ($main_cap))))
-                    SendMsgToKeypad($MSG_SETRGBBRIGHTNESS, Int($currentAudioLevel * ((255 / 4 * 3) / ($main_cap * 2))))
+                    SendMsgToKeypad($MSG_SETRGBBRIGHTNESS, Int($currentAudioLevel * ((255 / 4 * 3) / ($main_bassLevelCap * 2))))
                 EndIf
             EndIf
             
