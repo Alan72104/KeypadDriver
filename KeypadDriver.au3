@@ -27,7 +27,8 @@ Global $main_loopPeriod, $main_loopStartTime, $main_timer
 Global $main_timerRetrying
 Global $main_pollingReceivedTimer
 Global Const $main_audioSyncEnable = True
-Global $main_oBassLevel, $main_audioSyncTimer, $main_bassLevelCap
+Global $main_oBassLevel, $main_audioSyncTimer
+Global Const $main_bassLevelCap = 580
 
 SetGuiOpeningKey("{F4}")
 Opt("GUICloseOnESC", 0)
@@ -96,8 +97,7 @@ Func Main()
             If $main_audioSyncEnable And TimerDiff($main_audioSyncTimer) >= 1000 / 60 And $connectionStatus = $CONNECTED Then
                 $main_audioSyncTimer = TimerInit()
 	            Local $currentAudioLevel = $main_oBassLevel.GetBassLevel() * 50
-                If $currentAudioLevel > $main_bassLevelCap Then $main_bassLevelCap = $currentAudioLevel
-                SendMsgToKeypad($MSG_SETRGBBRIGHTNESS, Int($currentAudioLevel * ((255 * 1.5 / 4) / $main_bassLevelCap)))
+                SendMsgToKeypad($MSG_SETRGBBRIGHTNESS, Int(MIn($currentAudioLevel, $main_bassLevelCap) * ((255 * 1.5 / 4) / $main_bassLevelCap)))
             EndIf
             
             If IsGuiOpened() Then
@@ -150,8 +150,8 @@ EndFunc
 
 Main()
 
-Func Max($iNum1, $iNum2)
-	Return ($iNum1 > $iNum2) ? $iNum1 : $iNum2
+Func Min($iNum1, $iNum2)
+	Return ($iNum1 > $iNum2) ? $iNum2 : $iNum1
 EndFunc
 
 Func Terminate()
