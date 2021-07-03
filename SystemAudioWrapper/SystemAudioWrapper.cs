@@ -103,7 +103,7 @@ namespace SystemAudioWrapper
             return spectrum;
         }
 
-        public byte[] ToPCM16(byte[] inputBuffer, int length, WaveFormat format)
+        private byte[] ToPCM16(byte[] inputBuffer, int length, WaveFormat format)
         {
             if (length == 0)
                 return null; // No bytes recorded
