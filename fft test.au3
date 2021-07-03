@@ -33,6 +33,7 @@ Func Update()
 EndFunc
 
 Func Draw()
+	If Not UBound($rtn) Then Return
 	_GDIPlus_GraphicsClear($hFrameBuffer, $bgColorARGB)
 	$count = UBound($rtn) / 2
 	For $i = 0 To $count / 2 - 1
