@@ -88,7 +88,7 @@ Func Main()
 	$brushRed = _GDIPlus_BrushCreateSolid(0x03FF0000)
 	GUISetState(@SW_SHOW)
 	
-    If Not _DotNet_Load(@ScriptDir & "\SystemAudioWrapper\bin\Release\SystemAudioWrapper.dll") Then
+    If Not _DotNet_Load(@ScriptDir & "\Include\dlls\SystemAudioWrapper.dll") Then
         MsgBox($MB_ICONWARNING + $MB_TOPMOST, "KeypadDriver", "Exception catched ""Main()""" & @CRLF & @CRLF & _
                                                               "Loading SystemAudioWrapper.dll failed! error: " & @error & @CRLF & @CRLF & _
                                                               "Terminating!")
