@@ -35,6 +35,7 @@ Global $gui_monitoringType = $gui_MONITORRGB
 Global $gui_idRadioMonitorRgb, $gui_idRadioMonitorKeypress
 
 Global $gui_idComboRgbState, $gui_idButtonRgbUpdate, $gui_idButtonRgbIncreaseBrightness, $gui_idButtonRgbDecreaseBrightness, $gui_idButtonEffectIncreaseSpeed, $gui_idButtonEffectDecreaseSpeed
+Global $gui_idCheckBoxBassSync
 
 Global $gui_idLabelConnection
 
@@ -107,6 +108,10 @@ Func HandleMsg()
             SendMsgToKeypad($MSG_INCREASEEFFECTSPEED, 0)
         Case $gui_idButtonEffectDecreaseSpeed
             SendMsgToKeypad($MSG_DECREASEEFFECTSPEED, 0)
+
+        ; The bass sync enable checkbox
+        Case $gui_idCheckBoxBassSync
+            Return GUICtrlRead($gui_idCheckBoxBassSync) = $GUI_CHECKED ? 4 : 5
         
         ; Manually handle the other messages
         Case Else
@@ -273,7 +278,7 @@ Func OpenGui()
     
     ; vvvvvvvvvvvvvvvvvvvvvvvvv Group rgb controls vvvvvvvvvvvvvvvvvvvvvvvvv
     GUICtrlCreateGroup("RGB Controls", 50, (30 + 15 + 60 + 85 * 2 + 15) + 15, _
-                                           15 + 150 + 15 + 55 + (5 + 15) * 2 + 15, _
+                                           15 + 150 + 15 + 55 + (5 + 15) * 2 + 15 + 100 + 15, _
                                            15 + 25 + 8 + 25 + 15)
         $gui_idComboRgbState = GUICtrlCreateCombo($rgbStates[0], 50 + 15, _
                                                                  (30 + 15 + 60 + 85 * 2 + 15) + 15 + 15, _
@@ -300,6 +305,9 @@ Func OpenGui()
         $gui_idButtonEffectDecreaseSpeed = GUICtrlCreateButton("-", 50 + 15 + 150 + 15 + 55 + 5 + 15 + 10, _
                                                                     (30 + 15 + 60 + 85 * 2 + 15) + 15 + 15 + 25 + 8, _
                                                                     15, 25)
+        $gui_idCheckBoxBassSync = GUICtrlCreateCheckbox("Enable bass sync", 50 + 15 + 150 + 15 + 55 + 5 + 15 + 10 + 15 + 15, _
+                                                                            (30 + 15 + 60 + 85 * 2 + 15) + 15 + 15 + 20, _
+                                                                            100, 15)
     GUICtrlCreateGroup("", -99, -99, 1, 1)
     ; ^^^^^^^^^^^^^^^^^^^^^^^^^ Group rgb controls ^^^^^^^^^^^^^^^^^^^^^^^^^
 
