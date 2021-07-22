@@ -308,6 +308,7 @@ Func OpenGui()
         $gui_idCheckBoxBassSync = GUICtrlCreateCheckbox("Enable bass sync", 50 + 15 + 150 + 15 + 55 + 5 + 15 + 10 + 15 + 15, _
                                                                             (30 + 15 + 60 + 85 * 2 + 15) + 15 + 15 + 20, _
                                                                             100, 15)
+            GUICtrlSetState($gui_idCheckBoxBassSync, IsBassSyncEnabled() ? $GUI_CHECKED : $GUI_UNCHECKED)
     GUICtrlCreateGroup("", -99, -99, 1, 1)
     ; ^^^^^^^^^^^^^^^^^^^^^^^^^ Group rgb controls ^^^^^^^^^^^^^^^^^^^^^^^^^
 

@@ -159,6 +159,10 @@ EndFunc
 
 Main()
 
+Func IsBassSyncEnabled()
+    Return $main_audioSyncEnable
+EndFunc
+
 Func Min($iNum1, $iNum2)
 	Return ($iNum1 > $iNum2) ? $iNum2 : $iNum1
 EndFunc
