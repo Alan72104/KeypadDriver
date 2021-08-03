@@ -25,7 +25,7 @@ Global Const $main_scansPerSec = 1000
 Global Const $main_msPerScan = 1000 / $main_scansPerSec
 Global $main_loopPeriod, $main_loopStartTime, $main_timer
 Global $main_timerRetrying
-Global $main_pollingReceivedTimer
+Global $main_slowPollingTimer
 Global $main_audioSyncEnable = False
 Global $main_oBassLevel = Null
 Global $main_audioSyncTimer
@@ -74,12 +74,12 @@ Func Main()
         
             PollKeys()
             If IsKeyDataReceived() Then
-                $main_pollingReceivedTimer = TimerInit()
+                $main_slowPollingTimer = TimerInit()
                 ; c("Button: $ pressed, state: $", 1, $_pressedBtnNum, $_pressedBtnState)
                 If Not IsGuiOpened() Then
                     SendKey(GetKeyDataNum(), GetKeyDataState())
                 EndIf
-            ElseIf Not IsGuiOpened() And TimerDiff($main_pollingReceivedTimer) >= 25000 Then
+            ElseIf Not IsGuiOpened() And TimerDiff($main_slowPollingTimer) >= 25000 Then
                 If Not $main_audioSyncEnable Then Sleep(100)
             EndIf
 
