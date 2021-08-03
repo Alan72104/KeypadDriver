@@ -181,12 +181,15 @@ Func UpdateGui()
         EndSwitch
     EndIf
 
-    If $gui_monitoringType = $gui_MONITORKEYPRESS And $connectionStatus = $CONNECTED Then
-        If IsKeyDataReceived() Then
-            UpdateBtnLabelRgb(GetKeyDataNum(), 255, GetKeyDataState() ? 0 : 255, GetKeyDataState() ? 0 : 255)
-        EndIf
-    Else
-        SyncGuiRgb()
+    If $connectionStatus = $CONNECTED Then
+        Switch $gui_monitoringType
+            Case $gui_MONITORKEYPRESS
+                If IsKeyDataReceived() Then
+                    UpdateBtnLabelRgb(GetKeyDataNum(), 255, GetKeyDataState() ? 0 : 255, GetKeyDataState() ? 0 : 255)
+                EndIf
+            Case $gui_MONITORRGB
+                SyncGuiRgb()
+        EndSwitch
     EndIf
 EndFunc
 
