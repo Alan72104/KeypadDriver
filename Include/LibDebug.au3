@@ -1,4 +1,9 @@
-; Last modified date: 7/25/2021 4:15 PM GMT+8
+; Update history
+; 8/4/2021 6:13 AM GMT+8 - Rename `throw()` to `Throw()`
+;                           because it's not just for debugging
+;                          Remove last modified date
+; 8/1/2021 12:27 AM GMT+8 - Add update history
+;                           Change `Consoleout()` to always return string written
 
 #include-once
 #include <MsgBoxConstants.au3>
@@ -61,9 +66,7 @@ Func c($s = "", $nl = True, $v1 = 0x0, $v2 = 0x0, $v3 = 0x0, _
     Else
         ConsoleWrite($s)
     EndIf
-    If @NumParams = 1 Then
-        Return $s
-    EndIf
+    Return $s
 EndFunc
 
 ; Insert variable
@@ -135,52 +138,98 @@ Func cv($nl = True, $v1 = 0x0, $v2 = 0x0, $v3 = 0x0, $v4 = 0x0, $v5 = 0x0, _
 EndFunc
 
 ; Consoleout Array
-Func ca(ByRef $a, $nl = True)
+Func ca(ByRef $a, $nl = True, $nlOnNewEle = False, $indentForNewEle = " ", $out = True)
     If Not IsArray($a) Then
         Return
     EndIf
-    Local $s = "["
-    Switch UBound($a, 0)
-        Case 1
-            For $i = 0 To UBound($a) - 1
-                If IsString($a[$i]) Then
-                    $s &= '"'
-                EndIf
-                $s &= $a[$i]
-                If IsString($a[$i]) Then
-                    $s &= '"'
-                EndIf
-                If $i < UBound($a) - 1 Then
-                    $s &= ", "
-                EndIf
-            Next
-        Case 2
-            For $i = 0 To UBound($a, 1) - 1
-                $s &= "["
-                For $j = 0 To UBound($a, 2) - 1
-                    If IsString($a[$i][$j]) Then
-                        $s &= '"'
-                    EndIf
-                    $s &= $a[$i][$j]
-                    If IsString($a[$i][$j]) Then
-                        $s &= '"'
-                    EndIf
-                    If $j < UBound($a, 2) - 1 Then
-                        $s &= ", "
-                    EndIf
-                Next
-                $s &= "]"
-                If $i < UBound($a, 1) -1 Then
-                    $s &= ", "
-                EndIf
-            Next
-    EndSwitch
-    $s &= "]"
+    Local $dims = UBound($a, 0)
+    Local $s = ""
+    $s &= "{"
+    ca_internal($s, $a, 1, $dims, "", $nlOnNewEle, $indentForNewEle)
+    $s &= "}"
     If $nl Then
         $s &= @CRLF
     EndIf
-    ConsoleWrite($s)
-    Return $a
+    If $out Then
+        ConsoleWrite($s)
+        Return $a
+    Else
+        Return $s
+    EndIf
+EndFunc
+
+Func ca_internal(ByRef $s, ByRef $a, $dim, $dims, $ref, $nlOnNewEle, $indentForNewEle)
+    Local $count = UBound($a, $dim)
+    If $dim = $dims Then
+        Local $ele
+        For $i = 0 To $count - 1
+            $ele = Execute("$a" & $ref & "[" & $i & "]")
+            Switch VarGetType($ele)
+                Case "Double"
+                    $s &= $ele
+                    If Not IsFloat($ele) Then
+                        $s &= ".0"
+                    EndIf
+                Case "String"
+                    $s &= '"' & $ele & '"'
+                Case "Array"
+                    $s &= ca($ele, False, False, " ", False)
+                Case "Map"
+                    $s &= "Map"
+                Case "Object"
+                    $s &= ObjName($ele)
+                Case "DLLStruct"
+                    $s &= "Struct"
+                Case "Keyword"
+                    If IsKeyword($ele) = 2 Then
+                        $s &= "Null"
+                    Else
+                        $s &= $ele
+                    EndIf
+                Case "Function"
+                    $s &= FuncName($ele) & "()"
+                Case "UserFunction"
+                    $s &= FuncName($ele) & "()"
+                Case Else
+                    $s &= $ele
+            EndSwitch
+            If $i < $count - 1 Then
+                $s &= "," & $indentForNewEle
+            EndIf
+        Next
+    Else
+        Local $indent = $indentForNewEle
+        If $nlOnNewEle Then
+            $indent = ""
+            Local $indentBuf = $indentForNewEle
+            Local $repeatCount = $dim
+            While $repeatCount > 1
+                If BitAND($repeatCount, 1) Then
+                    $indent &= $indentBuf
+                EndIf
+                $indentBuf &= $indentBuf
+                $repeatCount = BitShift($repeatCount, 1)
+            WEnd
+            $indent &= $indentBuf
+        EndIf
+        For $i = 0 To $count - 1
+            If $nlOnNewEle Then
+                $s &= @CRLF & $indent
+            EndIf
+            $s &= "["
+            ca_internal($s, $a, $dim + 1, $dims, $ref & "[" & $i & "]", $nlOnNewEle, $indentForNewEle)
+            If $nlOnNewEle And $dim + 1 < $dims Then
+                $s &= @CRLF & $indent
+            EndIf
+            $s &= "]"
+            If $i < $count - 1 Then
+                $s &= "," & $indent
+            EndIf
+        Next
+        If $nlOnNewEle And $dim = 1 Then
+            $s &= @CRLF
+        EndIf
+    EndIf
 EndFunc
 
 ; Consoleout Error
@@ -192,15 +241,15 @@ Func ce($e, $nl = True)
     EndIf
 EndFunc
 
-; Throw an error msgbox
-Func throw($funcName, $m1 = 0x0, $m2 = 0x0, $m3 = 0x0, $m4 = 0x0, $m5 = 0x0, _
+; Throws an error msgbox
+Func Throw($funcName, $m1 = 0x0, $m2 = 0x0, $m3 = 0x0, $m4 = 0x0, $m5 = 0x0, _
                                  $m6 = 0x0, $m7 = 0x0, $m8 = 0x0, $m9 = 0x0, $m10 = 0x0)
     Local $s = "Exception catched on """ & $funcName & "()"""
     For $i = 1 To @NumParams - 1
         $s &= @CRLF & @CRLF
         $s &= Eval("m" & $i)
     Next
-    MsgBox($MB_ICONWARNING + $MB_TOPMOST, StringTrimRight(@ScriptName, 4), $s)
+    MsgBox($MB_ICONERROR + $MB_TOPMOST, StringTrimRight(@ScriptName, 4), $s)
 EndFunc
 
 ; Profiler profile Add
