@@ -44,9 +44,6 @@ Global $gui_idButtonClose, $gui_idButtonSave, $gui_idButtonLoad
 
 Global Enum $gui_UPDATERGBSTATE, $gui_GETRGBDATA, $gui_INCREASERGBBRIGHTNESS, $gui_DECREASERGBBRIGHTNESS, $gui_INCREASEEFFECTSPEED, $gui_DECREASEEFFECTSPEED
 
-Global $gui_syncingButtonIndex = 0
-Global $gui_syncingRgbIndex = 0
-Global $gui_rgbBuffer[$WIDTH * $HEIGHT][3]
 Opt("GUIOnEventMode", 1)
 
 Func OnMsg()
@@ -72,7 +69,7 @@ Func OnMsg()
             If Not @error Then
                 Local $firstLine = FileReadLine($path)
                 If Not $firstLine == "[ButtonBindings]" Then
-                    MsgBox($MB_ICONWARNING + $MB_TOPMOST, "KeypadDriver", "Please select a valid KeypadDriver config file!")
+                    Throw("OnMsg", "Please select a valid KeypadDriver config file!")
                 Else
                     ConfigLoad($path)
                 EndIf

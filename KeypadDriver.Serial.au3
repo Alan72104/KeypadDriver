@@ -96,15 +96,11 @@ Func SendMsgToKeypad($type, $data)
     
     ; Message - |1 byte for msg type, 1 byte for msg data|
     If $type > 0xFF Then
-        MsgBox($MB_ICONWARNING + $MB_TOPMOST, "KeypadDriver", "Exception catched ""SendMsgToKeypad()""" & @CRLF & @CRLF & _
-                                                              "Message type cannot be larger than 1 byte! Type: " & $type & @CRLF & @CRLF & _
-                                                              "Message not sent!")
+        Throw("SendMsgToKeypad", "Message type cannot be larger than 1 byte! Type: " & $type, "Message not sent!")
         Return
     EndIf
     If $data > 0xFF Then
-        MsgBox($MB_ICONWARNING + $MB_TOPMOST, "KeypadDriver", "Exception catched ""SendMsgToKeypad()""" & @CRLF & @CRLF & _
-                                                              "Data to send cannot be larger than 1 byte! Data: " & $data & @CRLF & @CRLF & _
-                                                              "Message not sent!")
+        Throw("SendMsgToKeypad", "Data to send cannot be larger than 1 byte! Data: " & $data, "Message not sent!")
         Return
     EndIf
 

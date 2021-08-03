@@ -56,9 +56,7 @@ Func Main()
     OpenGui()
     Connect()
     If Not _DotNet_Load(@ScriptDir & "\Include\Dlls\SystemAudioWrapper.dll") Then
-        MsgBox($MB_ICONWARNING + $MB_TOPMOST, "KeypadDriver", "Exception catched ""Main()""" & @CRLF & @CRLF & _
-                                                            "Loading SystemAudioWrapper.dll failed! error: " & @error & @CRLF & @CRLF & _
-                                                            "Terminating!")
+        Throw("Main", "Loading SystemAudioWrapper.dll failed! error: " & @error, "Terminating!")
         Terminate()
     EndIf
 
