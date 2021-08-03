@@ -38,7 +38,6 @@ Func Connect()
                 c("Connection failed, error: $", 1, $errorStr)
             EndIf
             
-            ; Port was detected, no matter whether it's connected or not, stop searching for the ports and return
             Return
         EndIf
     Next

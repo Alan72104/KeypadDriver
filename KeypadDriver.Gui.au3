@@ -50,6 +50,7 @@ Global $gui_rgbBuffer[$WIDTH * $HEIGHT][3]
 
 Opt("GUIOnEventMode", 1)
 
+; Will be called whenever a control is clicked
 Func OnMsg()
     $gui_msg = @GUI_CtrlId
     Switch $gui_msg
@@ -167,9 +168,9 @@ EndFunc
 Func UpdateGui()
     Local Static $lastConnectionStatus = -1
 
+    ; If the connection status changed then update the connection indicator
     If $lastConnectionStatus <> $connectionStatus Then
         $lastConnectionStatus = $connectionStatus
-        ; Update the connection indicator
         Switch $connectionStatus
             Case $NOTCONNECTED
                 GUICtrlSetData($gui_idLabelConnection, "Not connected, detecting the port...")
@@ -182,6 +183,7 @@ Func UpdateGui()
         EndSwitch
     EndIf
 
+    ; Update gui key status syncs
     If $connectionStatus = $CONNECTED Then
         Switch $gui_monitoringType
             Case $gui_MONITORKEYPRESS
