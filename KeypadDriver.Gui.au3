@@ -199,16 +199,13 @@ Func SyncGuiRgb()
 
     If $connectionStatus <> $CONNECTED Then Return
     If TimerDiff($syncTimer) > 1000 / 30 Then
-        $syncTimer = TimerInit()   
-
-        Local $timer = 0
+        $syncTimer = TimerInit()
         
         ; Clear the serial input buffer in case there are still some scrapped bytes
         _CommClearInputBuffer()
         SendMsgToKeypad($MSG_GETRGBDATA, 0)
         $gui_syncingButtonIndex = 0
         $gui_syncingRgbIndex = 0
-        $timer = TimerInit()
         
         ; Constantly poll the bytes from serial until all the rgb infos have been received
         ; One button consists of a RGB value, a RGB value consists of 3 bytes which are R, G and B
@@ -237,7 +234,7 @@ Func SyncGuiRgb()
             EndIf
             
             ; Watch out for timeouts that could potentially lock the script
-            If TimerDiff($timer) > 100 Then
+            If TimerDiff($syncTimer) > 100 Then
                 Return
             EndIf
         WEnd
