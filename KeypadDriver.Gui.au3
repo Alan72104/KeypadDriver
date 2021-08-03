@@ -186,7 +186,7 @@ Func SyncGuiRgb()
         $timer = TimerInit()
         
         ; Constantly poll the bytes from serial until all the rgb infos have been received
-        ; One button consists of a RGB value, a RGB value consists of 3 bytes for R, G and B
+        ; One button consists of a RGB value, a RGB value consists of 3 bytes which are R, G and B
         While 1
             Do
                 PollData()
@@ -211,7 +211,7 @@ Func SyncGuiRgb()
                 Return
             EndIf
             
-            ; Watch out for timeouts that could potentially freeze the script
+            ; Watch out for timeouts that could potentially lock the script
             If TimerDiff($timer) > 200 Then
                 Return
             EndIf
