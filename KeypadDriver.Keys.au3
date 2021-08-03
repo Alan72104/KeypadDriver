@@ -58,13 +58,13 @@ Func BindKey($num, $key, $extra = 0x0)
     EndSwitch
 EndFunc
 
-Func ConfigLoad(ByRef $path)
+Func ConfigLoad($path)
     For $i = 1 To $WIDTH * $HEIGHT
         BindKey($i, IniRead($path, "ButtonBindings", "Button" & $i & "Up", ""), IniRead($path, "ButtonBindings", "Button" & $i & "Down", ""))
     Next
 EndFunc
 
-Func ConfigSave(ByRef $path)
+Func ConfigSave($path)
     For $i = 1 To $WIDTH * $HEIGHT
         IniWrite($path, "ButtonBindings", "Button" & $i & "Up", GetKeybindingForKey($i, $KEYSTROKEUP))
         IniWrite($path, "ButtonBindings", "Button" & $i & "Down", GetKeybindingForKey($i, $KEYSTROKEDOWN))

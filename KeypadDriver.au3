@@ -91,53 +91,7 @@ Func Main()
             EndIf
             
             If IsGuiOpened() Then
-                If IsMonitoringKeypress() Then
-                    If IsKeyDataReceived() Then
-                        UpdateBtnLabelRgb(GetKeyDataNum(), 255, GetKeyDataState() ? 0 : 255, GetKeyDataState() ? 0 : 255)
-                    EndIf
-                Else
-                    SyncGuiRgb()
-                EndIf
-
-                ; HandleMsg() only handles gui related messages, returns extra messages if need to be explicitly handled
-                Switch HandleMsg()
-                    Case 0
-                    Case 1
-                        Terminate()
-                    Case 2
-                        ConfigSave($main_configPath)
-                    Case 3
-                        DisableGuiTopmost()
-                        Local $path = FileOpenDialog("Select a ini file", @ScriptDir, "Ini files (*.ini)", $FD_FILEMUSTEXIST + $FD_PATHMUSTEXIST)
-                        If Not @error Then
-                            Local $firstLine = FileReadLine($path)
-                            If Not $firstLine == "[ButtonBindings]" Then
-                                MsgBox($MB_ICONWARNING + $MB_TOPMOST, "KeypadDriver", "Please select a valid KeypadDriver config file!")
-                            Else
-                                ConfigLoad($path)
-                            EndIf
-                        EndIf
-                        EnableGuiTopmost()
-                    Case 4
-                        If Not $main_audioSyncEnable Then
-                            $main_audioSyncEnable = True
-                            $main_oBassLevel = ObjCreate("SystemAudioWrapper.SystemAudioBassLevel")
-                            If @error Then
-                                MsgBox($MB_ICONWARNING + $MB_TOPMOST, "KeypadDriver", "Exception catched ""Main()""" & @CRLF & @CRLF & _
-                                                                                    "Initializing SystemAudioBassLevel failed! error: " & @error & @CRLF & @CRLF & _
-                                                                                    "Terminating!")
-                                Terminate()
-                            EndIf
-                            $main_oBassLevel.Start(4096, 2, 4)
-                            $main_audioSyncTimer = TimerInit()
-                        EndIf
-                    Case 5
-                        If $main_audioSyncEnable Then
-                            $main_audioSyncEnable = False
-                            $main_oBassLevel = 0  ; Delete the object
-                            SendMsgToKeypad($MSG_SETRGBBRIGHTNESS, 63)
-                        EndIf
-                EndSwitch
+                UpdateGui()
             EndIf
                         
             ; Debug loop time and loop frequency output
@@ -158,6 +112,33 @@ Func Main()
 EndFunc
 
 Main()
+
+Func EnableAudioSync()
+    If Not $main_audioSyncEnable Then
+        $main_audioSyncEnable = True
+        $main_oBassLevel = ObjCreate("SystemAudioWrapper.SystemAudioBassLevel")
+        If @error Then
+            MsgBox($MB_ICONWARNING + $MB_TOPMOST, "KeypadDriver", "Exception catched ""Main()""" & @CRLF & @CRLF & _
+                                                                "Initializing SystemAudioBassLevel failed! error: " & @error & @CRLF & @CRLF & _
+                                                                "Terminating!")
+            Terminate()
+        EndIf
+        $main_oBassLevel.Start(4096, 2, 4)
+        $main_audioSyncTimer = TimerInit()
+    EndIf
+EndFunc
+
+Func DisableAudioSync()
+    If $main_audioSyncEnable Then
+        $main_audioSyncEnable = False
+        $main_oBassLevel = 0  ; Delete the object
+        SendMsgToKeypad($MSG_SETRGBBRIGHTNESS, 63)
+    EndIf
+EndFunc
+
+Func GetConfigPath()
+    Return $main_configPath
+EndFunc
 
 Func IsBassSyncEnabled()
     Return $main_audioSyncEnable

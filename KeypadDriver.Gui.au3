@@ -12,11 +12,12 @@
 #include <StringConstants.au3>
 #include <WindowsConstants.au3>
 #include "Include\CommMG.au3"
+#include "KeypadDriver.au3"
 #include "KeypadDriver.Vars.au3"
 #include "KeypadDriver.Serial.au3"
 #include "KeypadDriver.Keys.au3"
 
-Global $gui_guiOpened = False
+Global $gui_isGuiOpened = False
 Global $gui_hGui
 Global $gui_msg
 
@@ -24,7 +25,7 @@ Global $gui_idButtonBtns[$WIDTH * $HEIGHT]
 
 Global Enum $gui_BIND, $gui_REMOVE
 Global $gui_bindingAction = $gui_BIND
-Global $gui_bindingKeys = False
+Global $gui_isBindingKeys = False
 Global $gui_currentlyBinding = 0
 Global $gui_idGroupBinding, $gui_idLabelCurrentlyBinding, $gui_idLabelBindingArrow, $gui_idLabelBindingStr, $gui_idInputKeyUp, $gui_idInputKeyDown, $gui_idButtonConfirm, $gui_idButtonCancel
 
@@ -43,18 +44,14 @@ Global $gui_idButtonClose, $gui_idButtonSave, $gui_idButtonLoad
 
 Global Enum $gui_UPDATERGBSTATE, $gui_GETRGBDATA, $gui_INCREASERGBBRIGHTNESS, $gui_DECREASERGBBRIGHTNESS, $gui_INCREASEEFFECTSPEED, $gui_DECREASEEFFECTSPEED
 
-Global $gui_timerGuiBtnRgbSync
 Global $gui_syncingButtonIndex = 0
 Global $gui_syncingRgbIndex = 0
 Global $gui_rgbBuffer[$WIDTH * $HEIGHT][3]
+Opt("GUIOnEventMode", 1)
 
-; This function handles the gui messages and performs actions accordingly
-Func HandleMsg()
-    $gui_msg = GUIGetMsg()
+Func OnMsg()
+    $gui_msg = @GUI_CtrlId
     Switch $gui_msg
-        ; If no message to handle then simply skip
-        Case 0
-        
         ; The gui "x" button
         Case $GUI_EVENT_CLOSE
             CloseGui()
@@ -62,23 +59,33 @@ Func HandleMsg()
         ; The "Close the driver" button
         Case $gui_idButtonClose
             CloseGui()
-            Return 1
+            Terminate()
         
         ; The "Save to config" button
         Case $gui_idButtonSave
-            Return 2
+            ConfigSave(GetConfigPath())
         
         ; The "Load config" button
         Case $gui_idButtonLoad
-            Return 3
+            DisableGuiTopmost()
+            Local $path = FileOpenDialog("Select a ini file", @ScriptDir, "Ini files (*.ini)", $FD_FILEMUSTEXIST + $FD_PATHMUSTEXIST)
+            If Not @error Then
+                Local $firstLine = FileReadLine($path)
+                If Not $firstLine == "[ButtonBindings]" Then
+                    MsgBox($MB_ICONWARNING + $MB_TOPMOST, "KeypadDriver", "Please select a valid KeypadDriver config file!")
+                Else
+                    ConfigLoad($path)
+                EndIf
+            EndIf
+            EnableGuiTopmost()
         
         ; The binding action selectors
         Case $gui_idRadioBind
             $gui_bindingAction = $gui_BIND
         Case $gui_idRadioRemove
             $gui_bindingAction = $gui_REMOVE
-            If $gui_bindingKeys Then
-                $gui_bindingKeys = False
+            If $gui_isBindingKeys Then
+                $gui_isBindingKeys = False
                 ShowBindingGroup(0)
             EndIf
         
@@ -111,23 +118,38 @@ Func HandleMsg()
 
         ; The bass sync enable checkbox
         Case $gui_idCheckBoxBassSync
-            Return GUICtrlRead($gui_idCheckBoxBassSync) = $GUI_CHECKED ? 4 : 5
+            If GUICtrlRead($gui_idCheckBoxBassSync) = $GUI_CHECKED Then
+                EnableAudioSync()
+            Else
+                DisableAudioSync()
+            EndIf
         
-        ; Manually handle the other messages
+        ; The binding "Confirm" button, updates the key to new bindings
+        Case $gui_idButtonConfirm
+            BindKey($gui_currentlyBinding, GUICtrlRead($gui_idInputKeyUp), GUICtrlRead($gui_idInputKeyDown))
+            UpdateBtnLabels()
+            $gui_isBindingKeys = False
+            ShowBindingGroup(False)
+        
+        ; The binding "Cancel" button, closes the "Binding" group
+        Case $gui_idButtonCancel
+            $gui_isBindingKeys = False
+            ShowBindingGroup(False)
+        
         Case Else
-            ; The key buttons
+            ; Handle the key buttons in for loop to get the button number
             For $j = 0 To $HEIGHT - 1
                 For $i = 0 To $WIDTH - 1
                     If $gui_msg = $gui_idButtonBtns[$j * $WIDTH + $i] Then
                         Switch $gui_bindingAction
                             ; Open the "Binding" group for the specific key
                             Case $gui_BIND
-                                $gui_bindingKeys = True
+                                $gui_isBindingKeys = True
                                 $gui_currentlyBinding = $j * $WIDTH + $i + 1
                                 GUICtrlSetData($gui_idLabelCurrentlyBinding, "Binding key " & $gui_currentlyBinding)
                                 GUICtrlSetData($gui_idInputKeyUp, GetKeybindingForKey($j * $WIDTH + $i + 1, $KEYSTROKEUP))
                                 GUICtrlSetData($gui_idInputKeyDown, GetKeybindingForKey($j * $WIDTH + $i + 1, $KEYSTROKEDOWN))
-                                ShowBindingGroup(1)
+                                ShowBindingGroup(True)
                             
                             ; Remove the bindings for the specific key
                             Case $gui_REMOVE
@@ -138,45 +160,45 @@ Func HandleMsg()
                     EndIf
                 Next
             Next
-            
-            ; If the "Binding" group is active then handle the binding update buttons
-            If $gui_bindingKeys Then
-                ; The binding "Confirm" button, updates the key to new bindings
-                If $gui_msg = $gui_idButtonConfirm Then
-                    BindKey($gui_currentlyBinding, GUICtrlRead($gui_idInputKeyUp), GUICtrlRead($gui_idInputKeyDown))
-                    UpdateBtnLabels()
-                    $gui_bindingKeys = False
-                    ShowBindingGroup(0)
-                
-                ; The binding "Cancel" button, closes the "Binding" group
-                ElseIf $gui_msg = $gui_idButtonCancel Then
-                    $gui_bindingKeys = False
-                    ShowBindingGroup(0)
-                EndIf
-            EndIf
     EndSwitch
-    
-    ; Update the connection indicator
-    Switch $connectionStatus
-        Case $NOTCONNECTED
-            GUICtrlSetData($gui_idLabelConnection, "Not connected, detecting the port...")
-        Case $CONNECTIONFAILED
-            GUICtrlSetData($gui_idLabelConnection, "Cannot connect to " & GetComPort() & ", retrying...")
-        Case $PORTDETECTIONFAILED
-            GUICtrlSetData($gui_idLabelConnection, "COM port auto detection failed, please make sure you have the keypad plugged in!")
-        Case $CONNECTED
-            GUICtrlSetData($gui_idLabelConnection, "Connected to " & GetComPort())
-    EndSwitch
+EndFunc
 
-    Return 0
+Func UpdateGui()
+    Local Static $lastConnectionStatus = -1
+
+    If $lastConnectionStatus <> $connectionStatus Then
+        $lastConnectionStatus = $connectionStatus
+        ; Update the connection indicator
+        Switch $connectionStatus
+            Case $NOTCONNECTED
+                GUICtrlSetData($gui_idLabelConnection, "Not connected, detecting the port...")
+            Case $CONNECTIONFAILED
+                GUICtrlSetData($gui_idLabelConnection, "Cannot connect to " & GetComPort() & ", retrying...")
+            Case $PORTDETECTIONFAILED
+                GUICtrlSetData($gui_idLabelConnection, "COM port auto detection failed, please make sure you have the keypad plugged in!")
+            Case $CONNECTED
+                GUICtrlSetData($gui_idLabelConnection, "Connected to " & GetComPort())
+        EndSwitch
+    EndIf
+
+    If $gui_monitoringType = $gui_MONITORKEYPRESS And $connectionStatus = $CONNECTED Then
+        If IsKeyDataReceived() Then
+            UpdateBtnLabelRgb(GetKeyDataNum(), 255, GetKeyDataState() ? 0 : 255, GetKeyDataState() ? 0 : 255)
+        EndIf
+    Else
+        SyncGuiRgb()
+    EndIf
 EndFunc
 
 ; This function retrieves the rgb info from the keypad and syncs them to the gui
 Func SyncGuiRgb()
+    Local Static $syncTimer = 0
+
     If $connectionStatus <> $CONNECTED Then Return
-    Local $timer = 0
-    If TimerDiff($gui_timerGuiBtnRgbSync) > 150 Then
-        $gui_timerGuiBtnRgbSync = TimerInit()
+    If TimerDiff($syncTimer) > 150 Then
+        $syncTimer = TimerInit()   
+
+        Local $timer = 0
         
         ; Clear the serial input buffer in case there are still some scrapped bytes
         _CommClearInputBuffer()
@@ -255,10 +277,11 @@ EndFunc
 ; This function creates the gui 
 Func OpenGui()
     ; If gui is already opened, activate the window
-    If $gui_guiOpened Then Return WinActivate("THE Keypad Control Panel")
+    If $gui_isGuiOpened Then Return WinActivate("THE Keypad Control Panel")
     
+    $gui_isGuiOpened = True
     $gui_hGui = GUICreate("THE Keypad Control Panel", 750, 500, Default, Default, Default, $WS_EX_TOPMOST)
-    $gui_guiOpened = True
+    GUISetOnEvent($GUI_EVENT_CLOSE, "CloseGui")
 
     ; vvvvvvvvvvvvvvvvvvvvvvvvv Group buttons vvvvvvvvvvvvvvvvvvvvvvvvv
     GUICtrlCreateGroup("Buttons", 50, 30, _
@@ -271,6 +294,7 @@ Func OpenGui()
                                                                        50 + 15 + $i * 85, _
                                                                        30 + 15 + $j * 85, _
                                                                        60, 60, $BS_MULTILINE)
+                GUICtrlSetOnEvent($gui_idButtonBtns[$j * $WIDTH + $i], "OnMsg")
             Next
         Next
     GUICtrlCreateGroup("", -99, -99, 1, 1)
@@ -283,31 +307,45 @@ Func OpenGui()
         $gui_idComboRgbState = GUICtrlCreateCombo($rgbStates[0], 50 + 15, _
                                                                  (30 + 15 + 60 + 85 * 2 + 15) + 15 + 15, _
                                                                  150, 30)
+            GUICtrlSetOnEvent($gui_idComboRgbState, "OnMsg")
             GUICtrlSetData($gui_idComboRgbState, _ArrayToString($rgbStates, "|", 1))
+        
         $gui_idButtonRgbUpdate = GUICtrlCreateButton("Update", 50 + 15, _
                                                                (30 + 15 + 60 + 85 * 2 + 15) + 15 + 15 + 25 + 8, _
                                                                150, 25)
+            GUICtrlSetOnEvent($gui_idButtonRgbUpdate, "OnMsg")
+        
         GUICtrlCreateLabel("Brightness:", 50 + 15 + 150 + 15, _
                                           (30 + 15 + 60 + 85 * 2 + 15) + 15 + 15 + 3, _
                                           55, 15)
+        
         $gui_idButtonRgbIncreaseBrightness = GUICtrlCreateButton("+", 50 + 15 + 150 + 15 + 55 + 5, _
                                                                       (30 + 15 + 60 + 85 * 2 + 15) + 15 + 15, _
                                                                       15, 25)
+            GUICtrlSetOnEvent($gui_idButtonRgbIncreaseBrightness, "OnMsg")
+        
         $gui_idButtonRgbDecreaseBrightness = GUICtrlCreateButton("-", 50 + 15 + 150 + 15 + 55 + 5 + 15 + 10, _
                                                                       (30 + 15 + 60 + 85 * 2 + 15) + 15 + 15, _
                                                                       15, 25)
+            GUICtrlSetOnEvent($gui_idButtonRgbDecreaseBrightness, "OnMsg")
+        
         GUICtrlCreateLabel("Speed:", 50 + 15 + 150 + 15, _
                                           (30 + 15 + 60 + 85 * 2 + 15) + 15 + 15 + 25 + 8 + 3, _
                                           55, 15)
         $gui_idButtonEffectIncreaseSpeed = GUICtrlCreateButton("+", 50 + 15 + 150 + 15 + 55 + 5, _
                                                                     (30 + 15 + 60 + 85 * 2 + 15) + 15 + 15 + 25 + 8, _
                                                                     15, 25)
+            GUICtrlSetOnEvent($gui_idButtonEffectIncreaseSpeed, "OnMsg")
+        
         $gui_idButtonEffectDecreaseSpeed = GUICtrlCreateButton("-", 50 + 15 + 150 + 15 + 55 + 5 + 15 + 10, _
                                                                     (30 + 15 + 60 + 85 * 2 + 15) + 15 + 15 + 25 + 8, _
                                                                     15, 25)
+            GUICtrlSetOnEvent($gui_idButtonEffectDecreaseSpeed, "OnMsg")
+        
         $gui_idCheckBoxBassSync = GUICtrlCreateCheckbox("Enable bass sync", 50 + 15 + 150 + 15 + 55 + 5 + 15 + 10 + 15 + 15, _
                                                                             (30 + 15 + 60 + 85 * 2 + 15) + 15 + 15 + 20, _
                                                                             100, 15)
+            GUICtrlSetOnEvent($gui_idCheckBoxBassSync, "OnMsg")
             GUICtrlSetState($gui_idCheckBoxBassSync, IsBassSyncEnabled() ? $GUI_CHECKED : $GUI_UNCHECKED)
     GUICtrlCreateGroup("", -99, -99, 1, 1)
     ; ^^^^^^^^^^^^^^^^^^^^^^^^^ Group rgb controls ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -319,23 +357,34 @@ Func OpenGui()
         $gui_idLabelCurrentlyBinding = GUICtrlCreateLabel("Binding key 1", (50 + 15 + 60 + 85 * 3 + 15) + 15 + 15, _
                                                                            30 + 15, _
                                                                            100, 15)
+            GUICtrlSetOnEvent($gui_idLabelCurrentlyBinding, "OnMsg")
+        
         $gui_idLabelBindingArrow = GUICtrlCreateLabel("=>", (50 + 15 + 60 + 85 * 3 + 15) + 15 + 15, _
                                                             30 + 15 + 30, _
                                                             15, 15)
+            GUICtrlSetOnEvent($gui_idLabelBindingArrow, "OnMsg")
+        
         $gui_idInputKeyUp = GUICtrlCreateInput("{UP up}", (50 + 15 + 60 + 85 * 3 + 15) + 15 + 15 + 10 + 15, _
                                                           30 + 15 + 15, _
                                                           75, 20)
+            GUICtrlSetOnEvent($gui_idInputKeyUp, "OnMsg")
+        
         $gui_idInputKeyDown = GUICtrlCreateInput("{UP down}", (50 + 15 + 60 + 85 * 3 + 15) + 15 + 15 + 10 + 15, _
                                                               30 + 15 + 15 + 20 + 8, _
                                                               75, 20)
+            GUICtrlSetOnEvent($gui_idInputKeyDown, "OnMsg")
+        
         $gui_idButtonConfirm = GUICtrlCreateButton("Confirm", (50 + 15 + 60 + 85 * 3 + 15) + 15 + 15, _
                                                               30 + 15 + 15 + 20 + 8 + 20 + 25, _
                                                               100, 25)
+            GUICtrlSetOnEvent($gui_idButtonConfirm, "OnMsg")
+        
         $gui_idButtonCancel = GUICtrlCreateButton("Cancel", (50 + 15 + 60 + 85 * 3 + 15) + 15 + 15, _
                                                             30 + 15 + 15 + 20 + 8 + 20 + 25 + 25 + 8, _
                                                             100, 25)
+            GUICtrlSetOnEvent($gui_idButtonCancel, "OnMsg")
     GUICtrlCreateGroup("", -99, -99, 1, 1)
-    ShowBindingGroup(0)
+    ShowBindingGroup(False)
     ; ^^^^^^^^^^^^^^^^^^^^^^^^^ Group binding ^^^^^^^^^^^^^^^^^^^^^^^^^
 
     ; vvvvvvvvvvvvvvvvvvvvvvvvv Group actions vvvvvvvvvvvvvvvvvvvvvvvvv
@@ -344,8 +393,11 @@ Func OpenGui()
                                   15 + 100 + 15, _
                                   15 + 15 + 25 * 1 + 15)
         $gui_idRadioBind = GUICtrlCreateRadio("Bind to new keys", 750 - 50 - 15 - 100, 30 + 15, 100, 15)
+            GUICtrlSetOnEvent($gui_idRadioBind, "OnMsg")
             GUICtrlSetState($gui_idRadioBind, $GUI_CHECKED)
+        
         $gui_idRadioRemove = GUICtrlCreateRadio("Remove binding", 750 - 50 - 15 - 100, 30 + 15 + 15 + 10, 100, 15)
+            GUICtrlSetOnEvent($gui_idRadioRemove, "OnMsg")
     GUICtrlCreateGroup("", -99, -99, 1, 1)
     ; ^^^^^^^^^^^^^^^^^^^^^^^^^ Group actions ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -357,28 +409,36 @@ Func OpenGui()
         $gui_idRadioMonitorRgb = GUICtrlCreateRadio("RGB effect", 750 - 50 - 15 - 100, _
                                                                   (30 + 15 + 15 + 25 * 1 + 15) + 15 + 15, _
                                                                   100, 15)
+            GUICtrlSetOnEvent($gui_idRadioMonitorRgb, "OnMsg")
             GUICtrlSetState($gui_idRadioMonitorRgb, $GUI_CHECKED)
+        
         $gui_idRadioMonitorKeypress = GUICtrlCreateRadio("Key press", 750 - 50 - 15 - 100, _
                                                                       (30 + 15 + 15 + 25 * 1 + 15) + 15 + 15 + 15 + 10, _
                                                                       100, 15)
+            GUICtrlSetOnEvent($gui_idRadioMonitorKeypress, "OnMsg")
     GUICtrlCreateGroup("", -99, -99, 1, 1)
     ; ^^^^^^^^^^^^^^^^^^^^^^^^^ Group monitoring ^^^^^^^^^^^^^^^^^^^^^^^^^
 
     $gui_idButtonClose = GUICtrlCreateButton("Close the driver", 750 - 25 - 150, _
                                                                  500 - 25 - 25, _
                                                                  150, 25)
+        GUICtrlSetOnEvent($gui_idButtonClose, "Terminate")
         GUICtrlSetColor($gui_idButtonClose, 0xFF0000)
+
     $gui_idButtonSave = GUICtrlCreateButton("Save to config", 750 - 25 - 150 + 25, _
                                                               500 - 25 - 25 - 25 - 5, _
                                                               100, 25)
+        GUICtrlSetOnEvent($gui_idButtonSave, "OnMsg")
+    
     $gui_idButtonLoad = GUICtrlCreateButton("Load config", 750 - 25 - 150 + 25, _
                                                            500 - 25 - 25 - 25 - 5 - 25 - 5, _
                                                            100, 25)
+        GUICtrlSetOnEvent($gui_idButtonLoad, "OnMsg")
     
-    $gui_idLabelConnection = GUICtrlCreateLabel("Not connected, detecting the port...", 50, 500 - 25 - 15, 500, 15)
+    $gui_idLabelConnection = GUICtrlCreateLabel("", 50, 500 - 25 - 15, 500, 15)
 
     ; Reset the states
-    $gui_bindingKeys = False
+    $gui_isBindingKeys = False
     $gui_bindingAction = $gui_BIND
     $gui_monitoringType = $gui_MONITORRGB
     
@@ -391,15 +451,11 @@ EndFunc
 ; This function closes the gui
 Func CloseGui()
     GUIDelete($gui_hGui)
-    $gui_guiOpened = False
+    $gui_isGuiOpened = False
 EndFunc
 
 Func IsGuiOpened()
-    Return $gui_guiOpened
-EndFunc
-
-Func IsMonitoringKeypress()
-    Return $gui_monitoringType = $gui_MONITORKEYPRESS
+    Return $gui_isGuiOpened
 EndFunc
 
 Func EnableGuiTopmost()
