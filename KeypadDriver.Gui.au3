@@ -198,7 +198,7 @@ Func SyncGuiRgb()
     Local Static $syncTimer = 0
 
     If $connectionStatus <> $CONNECTED Then Return
-    If TimerDiff($syncTimer) > 150 Then
+    If TimerDiff($syncTimer) > 1000 / 30 Then
         $syncTimer = TimerInit()   
 
         Local $timer = 0
@@ -237,7 +237,7 @@ Func SyncGuiRgb()
             EndIf
             
             ; Watch out for timeouts that could potentially lock the script
-            If TimerDiff($timer) > 200 Then
+            If TimerDiff($timer) > 100 Then
                 Return
             EndIf
         WEnd
