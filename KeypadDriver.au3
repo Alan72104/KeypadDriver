@@ -27,7 +27,8 @@ Global $main_loopPeriod, $main_loopStartTime, $main_timer
 Global $main_timerRetrying
 Global $main_pollingReceivedTimer
 Global $main_audioSyncEnable = False
-Global $main_oBassLevel, $main_audioSyncTimer
+Global $main_oBassLevel = Null
+Global $main_audioSyncTimer
 Global Const $main_bassLevelCap = 580
 
 SetGuiOpeningKey("{F4}")
