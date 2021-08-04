@@ -24,7 +24,6 @@ Global $main_configPath = @ScriptDir & "\keypadconfig.ini"
 Global Const $main_scansPerSec = 1000
 Global Const $main_msPerScan = 1000 / $main_scansPerSec
 Global $main_loopPeriod, $main_loopStartTime, $main_timer
-Global $main_timerRetrying
 Global $main_slowPollingTimer
 Global $main_audioSyncEnable = False
 Global $main_oBassLevel = Null
@@ -65,13 +64,8 @@ Func Main()
     While 1
         $main_loopStartTime = TimerInit()
         If (TimerDiff($main_timer) >= ($main_msPerScan - ($main_loopPeriod > $main_msPerScan ? $main_msPerScan : $main_loopPeriod))) Then
-        
-            ; Because retrieving the port list takes a while, so we don't reconnect too often
-            If $connectionStatus <> $CONNECTED And TimerDiff($main_timerRetrying) > 5000 Then
-                $main_timerRetrying = TimerInit()
-                Connect()
-            EndIf
-        
+            EnsureConnection()
+
             PollKeys()
             If IsKeyDataReceived() Then
                 $main_slowPollingTimer = TimerInit()

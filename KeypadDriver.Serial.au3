@@ -46,6 +46,17 @@ Func Connect()
     $connectionStatus = $PORTDETECTIONFAILED
 EndFunc
 
+; This function checks for connection drop and tries to reconnect
+Func EnsureConnection()
+    Local Static $retryTimer = 0
+
+    ; Because retrieving the port list takes a while???, so don't reconnect too often
+    If $connectionStatus <> $CONNECTED And TimerDiff($retryTimer) > 4000 Then
+        $retryTimer = TimerInit()
+        Connect()
+    EndIf
+EndFunc
+
 ; This function polls the serial for new key datas
 Func PollKeys()
     If $connectionStatus <> $CONNECTED Then Return
