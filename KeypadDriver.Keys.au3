@@ -13,12 +13,6 @@
 
 ; [[keyStrokeUp, keyStrokeDown], ...]
 Global $keys_keyMap[$WIDTH * $HEIGHT][$keyStrokeAmount]
-    For $j = 0 To $HEIGHT - 1
-        For $i = 0 To $WIDTH - 1
-            $keys_keyMap[$j * $WIDTH + $i][$KEYSTROKEUP] = ""
-            $keys_keyMap[$j * $WIDTH + $i][$KEYSTROKEDOWN] = ""
-        Next
-    Next
 
 Func SendKey($num, $state)
     ; Only send the key stroke when the gui isn't opened
