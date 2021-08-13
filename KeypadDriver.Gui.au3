@@ -35,6 +35,8 @@ Global Enum $gui_MONITORRGB, $gui_MONITORKEYPRESS
 Global $gui_monitoringType = $gui_MONITORRGB
 Global $gui_idRadioMonitorRgb, $gui_idRadioMonitorKeypress
 
+Global $gui_idButtonEnableModifiedKeys, $gui_idButtonDisableModifiedKeys
+
 Global $gui_idComboRgbState, $gui_idButtonRgbUpdate, $gui_idButtonRgbIncreaseBrightness, $gui_idButtonRgbDecreaseBrightness, $gui_idButtonEffectIncreaseSpeed, $gui_idButtonEffectDecreaseSpeed
 Global $gui_idCheckBoxBassSync
 
@@ -101,6 +103,12 @@ Func OnMsg()
                     UpdateBtnLabelRgb($j * $WIDTH + $i + 1, 255, 255, 255)
                 Next
             Next
+
+        ; The modified keys control buttons
+        Case $gui_idButtonEnableModifiedKeys
+            SendMsgToKeypad($MSG_ENABLEMODIFIEDKEYS, 0)
+        Case $gui_idButtonDisableModifiedKeys
+            SendMsgToKeypad($MSG_DISABLEMODIFIEDKEYS, 0)
         
         ; The rgb "Update" button
         Case $gui_idButtonRgbUpdate
@@ -422,6 +430,16 @@ Func OpenGui()
             GUICtrlSetOnEvent($gui_idRadioMonitorKeypress, "OnMsg")
     GUICtrlCreateGroup("", -99, -99, 1, 1)
     ; ^^^^^^^^^^^^^^^^^^^^^^^^^ Group monitoring ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    $gui_idButtonEnableModifiedKeys = GUICtrlCreateButton("Enable modified keys", 750 - 50 - 15 - 100 - 15, _
+                                                                 ((30 + 15 + 15 + 25 * 1 + 15) + 15 + 15 + 15 + 25 * 1 + 15) + 15, _
+                                                                 130, 25)
+        GUICtrlSetOnEvent($gui_idButtonEnableModifiedKeys, "OnMsg")
+
+    $gui_idButtonDisableModifiedKeys = GUICtrlCreateButton("Disable modified keys", 750 - 50 - 15 - 100 - 15, _
+                                                                 ((30 + 15 + 15 + 25 * 1 + 15) + 15 + 15 + 15 + 25 * 1 + 15) + 15 + 25 + 5, _
+                                                                 130, 25)
+        GUICtrlSetOnEvent($gui_idButtonDisableModifiedKeys, "OnMsg")
 
     $gui_idButtonClose = GUICtrlCreateButton("Close the driver", 750 - 25 - 150, _
                                                                  500 - 25 - 25, _
