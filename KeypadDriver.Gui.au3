@@ -165,7 +165,7 @@ Func OnMsg()
     EndSwitch
 EndFunc
 
-Func UpdateGui()
+Func UpdateGui($onlyLabel = False)
     Local Static $lastConnectionStatus = -1
 
     ; If the connection status changed then update the connection indicator
@@ -182,6 +182,7 @@ Func UpdateGui()
                 GUICtrlSetData($gui_idLabelConnection, "Connected to " & GetComPort())
         EndSwitch
     EndIf
+    if $onlyLabel Then Return
 
     ; Update gui key status syncs
     If $connectionStatus = $CONNECTED Then
@@ -439,6 +440,7 @@ Func OpenGui()
         GUICtrlSetOnEvent($gui_idButtonLoad, "OnMsg")
     
     $gui_idLabelConnection = GUICtrlCreateLabel("", 50, 500 - 25 - 15, 500, 15)
+        UpdateGui(True)  ; Only update the connection label
 
     ; Reset the states
     $gui_isBindingKeys = False
