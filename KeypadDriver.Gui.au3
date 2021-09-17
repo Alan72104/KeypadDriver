@@ -177,7 +177,7 @@ Func UpdateGui($onlyLabel = False)
     Local Static $lastConnectionStatus = -1
 
     ; If the connection status changed then update the connection indicator
-    If $lastConnectionStatus <> $connectionStatus Then
+    If $lastConnectionStatus <> $connectionStatus Or $onlyLabel Then
         $lastConnectionStatus = $connectionStatus
         Switch $connectionStatus
             Case $NOTCONNECTED
