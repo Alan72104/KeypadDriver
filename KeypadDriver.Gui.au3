@@ -247,6 +247,8 @@ Func SyncGuiRgb()
             
             ; Watch out for timeouts that could potentially lock the script
             If TimerDiff($syncTimer) > 100 Then
+                ; Don't forget to clear buffer
+                _CommClearInputBuffer()
                 Return
             EndIf
         WEnd
