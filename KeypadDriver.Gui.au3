@@ -176,7 +176,7 @@ EndFunc
 Func UpdateGui($onlyLabel = False)
     Local Static $lastConnectionStatus = -1
 
-    ; If the connection status changed then update the connection indicator
+    ; If the connection status is changed then update the connection indicator
     If $lastConnectionStatus <> $connectionStatus Or $onlyLabel Then
         $lastConnectionStatus = $connectionStatus
         Switch $connectionStatus
@@ -224,6 +224,12 @@ Func SyncGuiRgb()
         While 1
             Do
                 PollData()
+                If $connectionStatus <> $CONNECTED Then
+                    ; Don't forget to clear buffer
+                    ByteProcessed()
+                    _CommClearInputBuffer()
+                    Return
+                EndIf
             Until IsByteReceived()
             $gui_rgbBuffer[$gui_syncingButtonIndex][$gui_syncingRgbIndex] = GetByte()
             ByteProcessed()
@@ -247,7 +253,6 @@ Func SyncGuiRgb()
             
             ; Watch out for timeouts that could potentially lock the script
             If TimerDiff($syncTimer) > 100 Then
-                ; Don't forget to clear buffer
                 _CommClearInputBuffer()
                 Return
             EndIf

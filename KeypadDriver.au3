@@ -35,9 +35,9 @@ Opt("GUICloseOnESC", 0)
 
 Func Main()
     _CommSetDllPath(@ScriptDir & "\Include\commg.dll")
-    If FileExists($main_configPath) Then  ; If the config exists then use the binding in it
+    If FileExists($main_configPath) Then
         ConfigLoad($main_configPath)
-    Else  ; If config doesn't exist then use the default binding
+    Else  ; Default bindings
         BindKey(1, "ESC")
         BindKey(2, "`")
         BindKey(3, "c")
@@ -111,9 +111,8 @@ Func EnableAudioSync()
         $main_audioSyncEnable = True
         $main_oBassLevel = ObjCreate("SystemAudioWrapper.SystemAudioBassLevel")
         If @error Then
-            MsgBox($MB_ICONWARNING + $MB_TOPMOST, "KeypadDriver", "Exception catched ""Main()""" & @CRLF & @CRLF & _
-                                                                "Initializing SystemAudioBassLevel failed! error: " & @error & @CRLF & @CRLF & _
-                                                                "Terminating!")
+            Throw("Main", "Initializing SystemAudioBassLevel failed! error: " & @error, _
+                          "Terminating!")
             Terminate()
         EndIf
         $main_oBassLevel.Start(4096, 2, 4)
