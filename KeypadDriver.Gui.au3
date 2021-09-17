@@ -224,9 +224,11 @@ Func SyncGuiRgb()
         While 1
             Do
                 PollData()
-                If $connectionStatus <> $CONNECTED Then
-                    ; Don't forget to clear buffer
+
+                ; Watch out for timeouts that could potentially lock the script
+                If TimerDiff($syncTimer) > 100 Then
                     ByteProcessed()
+                    ; Don't forget to clear buffer
                     _CommClearInputBuffer()
                     Return
                 EndIf
@@ -248,12 +250,6 @@ Func SyncGuiRgb()
                         UpdateBtnLabelRgb($j * $WIDTH + $i + 1, $gui_rgbBuffer[$j * $WIDTH + $i][0], $gui_rgbBuffer[$j * $WIDTH + $i][1], $gui_rgbBuffer[$j * $WIDTH + $i][2])
                     Next
                 Next
-                Return
-            EndIf
-            
-            ; Watch out for timeouts that could potentially lock the script
-            If TimerDiff($syncTimer) > 100 Then
-                _CommClearInputBuffer()
                 Return
             EndIf
         WEnd
