@@ -73,7 +73,7 @@ Func Main()
                 If Not IsGuiOpened() Then
                     SendKey(GetKeyDataNum(), GetKeyDataState())
                 EndIf
-            ElseIf Not IsGuiOpened() And TimerDiff($main_slowPollingTimer) >= 25000 Then
+            ElseIf Not IsGuiOpened() And TimerDiff($main_slowPollingTimer) >= 60000 Then
                 If Not $main_audioSyncEnable Then Sleep(100)
             EndIf
 
