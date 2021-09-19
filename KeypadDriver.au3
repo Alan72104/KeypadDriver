@@ -123,7 +123,7 @@ EndFunc
 Func DisableAudioSync()
     If $main_audioSyncEnable Then
         $main_audioSyncEnable = False
-        $main_oBassLevel = 0  ; Delete the object
+        $main_oBassLevel = Null  ; Delete the object
         SendMsgToKeypad($MSG_SETRGBBRIGHTNESS, 63)
     EndIf
 EndFunc
