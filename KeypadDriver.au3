@@ -12,6 +12,7 @@
 #RequireAdmin
 #include-once
 #include <FileConstants.au3>
+#include <TrayConstants.au3>
 #include "Include\LibDebug.au3"
 #include "Include\CommMG.au3"
 #include "Include\DotNetDLLWrapper.au3"
@@ -68,6 +69,8 @@ Func Main()
     TrayItemSetOnEvent($main_trayBtnToggleBassSync, "ToggleBassSync")
     $main_trayBtnExit = TrayCreateItem("Close")
     TrayItemSetOnEvent($main_trayBtnExit, "Terminate")
+    TraySetOnEvent($TRAY_EVENT_PRIMARYDOUBLE, "OpenGui")
+    TraySetClick(8)
 
     ; Local $t = 0
     ; Local $tt = 0
