@@ -29,12 +29,15 @@ Global $main_audioSyncEnable = False
 Global $main_oBassLevel = Null
 Global $main_audioSyncTimer
 Global Const $main_bassLevelCap = 580
+Global $main_trayBtnExit, $main_trayBtnToggleBassSync
 
 SetGuiOpeningKey("{F4}")
 Opt("GUICloseOnESC", 0)
 Opt("TrayAutoPause", 0)
 Opt("TrayMenuMode", 1)
+Opt("TrayOnEventMode", 1)
 TraySetIcon($iconPath)
+OnAutoItExitRegister("OnExit")
 
 Func Main()
     _CommSetDllPath(@ScriptDir & "\Include\commg.dll")
@@ -61,6 +64,10 @@ Func Main()
         Throw("Main", "Loading SystemAudioWrapper.dll failed! error: " & @error, "Terminating!")
         Terminate()
     EndIf
+    $main_trayBtnToggleBassSync = TrayCreateItem("Toggle bass sync")
+    TrayItemSetOnEvent($main_trayBtnToggleBassSync, "ToggleBassSync")
+    $main_trayBtnExit = TrayCreateItem("Close")
+    TrayItemSetOnEvent($main_trayBtnExit, "Terminate")
 
     ; Local $t = 0
     ; Local $tt = 0
@@ -109,6 +116,14 @@ EndFunc
 
 Main()
 
+Func ToggleBassSync()
+    If $main_audioSyncEnable Then
+        DisableAudioSync()
+    Else
+        EnableAudioSync()
+    EndIf
+EndFunc
+
 Func EnableAudioSync()
     If Not $main_audioSyncEnable Then
         $main_audioSyncEnable = True
@@ -145,4 +160,9 @@ EndFunc
 
 Func Terminate()
     Exit
+EndFunc
+
+Func OnExit()
+    CloseGui()
+    DisableAudioSync()
 EndFunc
