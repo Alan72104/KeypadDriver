@@ -38,6 +38,7 @@ Opt("TrayAutoPause", 0)
 Opt("TrayMenuMode", 1)
 Opt("TrayOnEventMode", 1)
 TraySetIcon($iconPath)
+TraySetToolTip("Keypad Driver")
 OnAutoItExitRegister("OnExit")
 
 Func Main()
