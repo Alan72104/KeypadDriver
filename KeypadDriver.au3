@@ -32,6 +32,9 @@ Global Const $main_bassLevelCap = 580
 
 SetGuiOpeningKey("{F4}")
 Opt("GUICloseOnESC", 0)
+Opt("TrayAutoPause", 0)
+Opt("TrayMenuMode", 1)
+TraySetIcon($iconPath)
 
 Func Main()
     _CommSetDllPath(@ScriptDir & "\Include\commg.dll")

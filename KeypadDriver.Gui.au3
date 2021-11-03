@@ -468,6 +468,7 @@ Func OpenGui()
     $gui_bindingAction = $gui_BIND
     $gui_monitoringType = $gui_MONITORRGB
     
+    GUISetIcon($iconPath)
     ; Show the gui
     GUISetState(@SW_SHOW)
     
