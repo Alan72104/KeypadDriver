@@ -17,7 +17,7 @@ Global $serial_byteString = "", $serial_byte, $serial_byteReceived = False
 
 Global $serial_comPort
 
-; This function tries to connect to the keypad serial port
+; Tries to connect to the keypad serial port
 Func Connect()
     Local $ports[0]
     $ports = _ComGetPortNames()
@@ -28,7 +28,7 @@ Func Connect()
             _CommSetPort(Int(StringReplace($serial_comPort, "COM", "")), $errorStr, 19200, 8, "none", 1, 2)
             
             If Not @error Then
-                ; Connection succeed
+                ; Connection completed
                 $connectionStatus = $CONNECTED
                 _CommSetRTS(0)
                 _CommSetDTR(0)
@@ -42,11 +42,11 @@ Func Connect()
         EndIf
     Next
     
-    ; If it reaches this line that means no port was detected, set the status to detection failed
+    ; If it reaches this line that means no port was detected
     $connectionStatus = $PORTDETECTIONFAILED
 EndFunc
 
-; This function checks for connection drop and tries to reconnect
+; Checks for connection drop and try to reconnect
 Func EnsureConnection()
     Local Static $retryTimer = 0
 
@@ -57,11 +57,11 @@ Func EnsureConnection()
     EndIf
 EndFunc
 
-; This function polls the serial for new key datas
+; Polls the serial for new key datas
 Func PollKeys()
     If $connectionStatus <> $CONNECTED Then Return
     
-    ; If there's still unprocessed key data in the buffers, return
+    ; Don't continue if there's still unprocessed key data in the buffer
     If $serial_keyDataReceived Then Return
     
     $serial_byteString = _CommReadByte()
@@ -80,11 +80,11 @@ Func PollKeys()
     EndIf
 EndFunc
 
-; This function polls the serial for a byte
+; Polls the serial for a byte
 Func PollData()
     If $connectionStatus <> $CONNECTED Then Return
     
-    ; If there's still unprocessed byte in the buffer $serial_byte, return
+    ; Don't continue if there's still unprocessed byte in the buffer
     If $serial_byteReceived Then Return
     
     $serial_byteString = _CommReadByte()
@@ -100,7 +100,7 @@ Func PollData()
     EndIf
 EndFunc
 
-; This function sends a message to the keypad
+; Sends a message to the keypad
 Func SendMsgToKeypad($type, $data)
     If $connectionStatus <> $CONNECTED Then Return
     

@@ -52,7 +52,7 @@ Global $gui_rgbBuffer[$WIDTH * $HEIGHT][3]
 
 Opt("GUIOnEventMode", 1)
 
-; Will be called whenever a control is clicked
+; Called whenever a control is clicked
 Func OnMsg()
     $gui_msg = @GUI_CtrlId
     Switch $gui_msg
@@ -176,7 +176,7 @@ EndFunc
 Func UpdateGui($onlyLabel = False)
     Local Static $lastConnectionStatus = -1
 
-    ; If the connection status is changed then update the connection indicator
+    ; Only update the label if needed to prevent flickering
     If $lastConnectionStatus <> $connectionStatus Or $onlyLabel Then
         $lastConnectionStatus = $connectionStatus
         Switch $connectionStatus
@@ -192,7 +192,7 @@ Func UpdateGui($onlyLabel = False)
     EndIf
     if $onlyLabel Then Return
 
-    ; Update gui key status syncs
+    ; Update gui key status
     If $connectionStatus = $CONNECTED Then
         Switch $gui_monitoringType
             Case $gui_MONITORKEYPRESS
@@ -205,7 +205,7 @@ Func UpdateGui($onlyLabel = False)
     EndIf
 EndFunc
 
-; This function retrieves the rgb info from the keypad and syncs them to the gui
+; Retrieves the rgb info from the keypad and syncs them to the gui
 Func SyncGuiRgb()
     Local Static $syncTimer = 0
 
@@ -257,7 +257,7 @@ Func SyncGuiRgb()
     EndIf
 EndFunc
 
-; This function updates the key buttons' text to their "keyStrokeDown"s
+; Updates the key buttons' text to their "keyStrokeDown"s
 Func UpdateBtnLabels()
     For $j = 0 To $HEIGHT - 1
         For $i = 0 To $WIDTH - 1
@@ -267,14 +267,14 @@ Func UpdateBtnLabels()
     Next
 EndFunc
 
-; This function updates the background colors of the key buttons
+; Updates the background colors of the key buttons
 Func UpdateBtnLabelRgb($num, $r, $g, $b)
     If $num <= $WIDTH * $HEIGHT Then
         GUICtrlSetBkColor($gui_idButtonBtns[$num - 1], $r * 256 * 256 + $g * 256 + $b)
     EndIf
 EndFunc
 
-; This function shows or hides the "Binding" group and the inside controls
+; Shows or hides the "Binding" group and the inside controls
 Func ShowBindingGroup($state)
     $state = $state ? $GUI_SHOW : $GUI_HIDE
     GUICtrlSetState($gui_idGroupBinding, $state)
@@ -290,9 +290,9 @@ Func SetGuiOpeningKey($key)
     HotKeySet($key, "OpenGui")
 EndFunc
 
-; This function creates the gui 
+; Creates the gui 
 Func OpenGui()
-    ; If gui is already opened, activate the window
+    ; If gui is already opened, activate the window instead
     If $gui_isGuiOpened Then Return WinActivate("THE Keypad Control Panel")
     
     $gui_isGuiOpened = True
@@ -462,7 +462,7 @@ Func OpenGui()
         GUICtrlSetOnEvent($gui_idButtonLoad, "OnMsg")
     
     $gui_idLabelConnection = GUICtrlCreateLabel("", 50, 500 - 25 - 15, 500, 15)
-        UpdateGui(True)  ; Only update the connection label
+        UpdateGui(True)  ; Update the connection label
 
     ; Reset the states
     $gui_isBindingKeys = False
@@ -476,7 +476,6 @@ Func OpenGui()
     $gui_timerGuiBtnRgbSync = TimerInit()
 EndFunc
 
-; This function closes the gui
 Func CloseGui()
     GUIDelete($gui_hGui)
     $gui_isGuiOpened = False

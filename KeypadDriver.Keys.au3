@@ -31,15 +31,14 @@ Func GetKeybindingForKey($num, $state)
     EndIf
 EndFunc
 
-; This function removes both up and down strokes from a key
+; Removes both up and down strokes from a key
 Func BindRemove($num)
     $keys_keyMap[$num - 1][$KEYSTROKEUP] = ""
     $keys_keyMap[$num - 1][$KEYSTROKEDOWN] = ""
 EndFunc
 
-; This function takes 2 arguments and binds a character to both up and down strokes of a key
-;
-; Or takes 3 arguments and binds custom up and down strokes to a key
+; Takes 2 arguments and binds a character to both keystrokes of a key,
+; or takes 3 arguments and binds special keystrokes to a key
 Func BindKey($num, $key, $extra = 0x0)
     If $num > $WIDTH * $HEIGHT Then Return
     Switch @NumParams
