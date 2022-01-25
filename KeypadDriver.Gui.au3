@@ -245,6 +245,7 @@ Func SyncGuiRgb()
             
             ; If all the buttons' rgb have been received, update the key buttons' colors and return
             If $gui_syncingButtonIndex = $WIDTH * $HEIGHT Then
+                ; TODO: Prevent window flashing
                 For $j = 0 To $HEIGHT - 1
                     For $i = 0 To $WIDTH - 1
                         UpdateBtnLabelRgb($j * $WIDTH + $i + 1, $gui_rgbBuffer[$j * $WIDTH + $i][0], $gui_rgbBuffer[$j * $WIDTH + $i][1], $gui_rgbBuffer[$j * $WIDTH + $i][2])
