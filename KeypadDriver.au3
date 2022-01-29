@@ -5,17 +5,19 @@
 ; ================================================================================
 ;
 ; KeypadDriver.au3
-; This main file runs the main loop, key binding functions and includes all the other modules 
+; Runs the main loop
 ;
 ; ================================================================================
 
 #RequireAdmin
 #include-once
+#include <Date.au3>
 #include <FileConstants.au3>
 #include <TrayConstants.au3>
 #include "Include\LibDebug.au3"
 #include "Include\CommMG.au3"
 #include "Include\DotNetDLLWrapper.au3"
+#include "Include\Autoit-DiscordGameSDK\DiscordGameSDK.au3"
 #include "KeypadDriver.Vars.au3"
 #include "KeypadDriver.Gui.au3"
 #include "KeypadDriver.Serial.au3"
@@ -31,6 +33,10 @@ Global $main_oBassLevel = Null
 Global $main_audioSyncTimer
 Global Const $main_bassLevelCap = 580
 Global $main_trayBtnExit, $main_trayBtnToggleBassSync
+Global $main_pressCount = 0
+Global $activity[18]
+Global $main_richPresenceUpdateTimer
+Global $main_discordHasFinishSetup = False
 
 SetGuiOpeningKey("{F4}")
 Opt("GUICloseOnESC", 0)
@@ -66,6 +72,11 @@ Func Main()
         Throw("Main", "Loading SystemAudioWrapper.dll failed! error: " & @error, "Terminating!")
         Terminate()
     EndIf
+    If Not _Discord_Init(935375293437337630, @ScriptDir & "\Include\Autoit-DiscordGameSDK\") Then
+        Throw("Main", "Failed to init DiscordGameSDK!", @error, @extended)
+        Terminate()
+    EndIf
+    
     $main_trayBtnToggleBassSync = TrayCreateItem("Toggle bass sync")
     TrayItemSetOnEvent($main_trayBtnToggleBassSync, "ToggleBassSync")
     $main_trayBtnExit = TrayCreateItem("Close")
@@ -73,6 +84,23 @@ Func Main()
     TraySetOnEvent($TRAY_EVENT_PRIMARYDOUBLE, "OpenGui")
     TraySetClick(8)
 
+    ; Less thing to run
+    ; _Discord_SetLogHook($DISCORD_LOGLEVEL_DEBUG, LogHookHandler)
+    _Discord_UserManager_OnCurrentUserUpdate(OnCurrentUserUpdateHandler)
+    Local $now = _Date_Time_GetSystemTime()
+    Local $unixUtc = _DateDiff('s', "1970/01/01 00:00:00", _Date_Time_SystemTimeToDateTimeStr($now, 1))
+    $activity[3] = "Smashing keys"
+    $activity[4] = "0 keys pressed"
+    $activity[5] = $unixUtc
+    $activity[7] = "iconwithpadding"
+    $activity[8] = "All done from an Autoit script!"
+    $activity[9] = "speed_silver"
+    $activity[10] = "Bruh"
+    ; It will not update RP and crash on exiting somehow if we didn't let it finish connecting
+    Do
+        _Discord_RunCallbacks()
+    Until $main_discordHasFinishSetup
+    
     ; Local $t = 0
     ; Local $tt = 0
     While 1
@@ -80,12 +108,15 @@ Func Main()
         If (TimerDiff($main_timer) >= ($main_msPerScan - ($main_loopPeriod > $main_msPerScan ? $main_msPerScan : $main_loopPeriod))) Then
             EnsureConnection()
 
-            PollKeys()
             If IsKeyDataReceived() Then
+                PollKeys()
                 $main_slowPollingTimer = TimerInit()
                 ; c("Button: $ pressed, state: $", 1, $_pressedBtnNum, $_pressedBtnState)
                 If Not IsGuiOpened() Then
                     SendKey(GetKeyDataNum(), GetKeyDataState())
+                    If GetKeyDataState() = 1 Then
+                        $main_pressCount += 1
+                    EndIf
                 EndIf
             ElseIf Not IsGuiOpened() And TimerDiff($main_slowPollingTimer) >= 60000 Then
                 If Not $main_audioSyncEnable Then Sleep(100)
@@ -99,6 +130,12 @@ Func Main()
             
             If IsGuiOpened() Then
                 UpdateGui()
+            EndIf
+            
+            If TimerDiff($main_richPresenceUpdateTimer) >= 8 * 1000 Then
+                $main_richPresenceUpdateTimer = TimerInit()
+                UpdateRP()
+                _Discord_RunCallbacks()
             EndIf
                         
             ; Debug loop time and loop frequency output
@@ -119,6 +156,22 @@ Func Main()
 EndFunc
 
 Main()
+
+Func UpdateRP()
+    $activity[4] = $main_pressCount & " keys pressed"
+    _Discord_ActivityManager_UpdateActivity($activity, UpdateActivityHandler)
+EndFunc
+
+Func UpdateActivityHandler($result)
+EndFunc
+
+Func OnCurrentUserUpdateHandler()
+    $main_discordHasFinishSetup = True
+EndFunc
+
+Func LogHookHandler($level, $msg)
+    c("Log: level $, $", 1, $level, $msg)
+EndFunc
 
 Func ToggleBassSync()
     If $main_audioSyncEnable Then
