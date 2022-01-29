@@ -108,8 +108,8 @@ Func Main()
         If (TimerDiff($main_timer) >= ($main_msPerScan - ($main_loopPeriod > $main_msPerScan ? $main_msPerScan : $main_loopPeriod))) Then
             EnsureConnection()
 
+            PollKeys()
             If IsKeyDataReceived() Then
-                PollKeys()
                 $main_slowPollingTimer = TimerInit()
                 ; c("Button: $ pressed, state: $", 1, $_pressedBtnNum, $_pressedBtnState)
                 If Not IsGuiOpened() Then
@@ -134,8 +134,8 @@ Func Main()
             
             If TimerDiff($main_richPresenceUpdateTimer) >= 8 * 1000 Then
                 $main_richPresenceUpdateTimer = TimerInit()
-                UpdateRP()
                 _Discord_RunCallbacks()
+                UpdateRP()
             EndIf
                         
             ; Debug loop time and loop frequency output
@@ -158,19 +158,35 @@ EndFunc
 Main()
 
 Func UpdateRP()
+    Local Static $lastCount = -1
+    If $lastCount = $main_pressCount Then
+        Return
+    EndIf
+    $lastCount = $main_pressCount
     $activity[4] = $main_pressCount & " keys pressed"
     _Discord_ActivityManager_UpdateActivity($activity, UpdateActivityHandler)
 EndFunc
 
 Func UpdateActivityHandler($result)
+    ; If $result <> $DISCORD_OK Then
+        ; c("UpdateActivity failed with $", 1, _Discord_GetErrorString(@error))
+    ; Else
+        ; c("UpdateActivity succeeded")
+    ; EndIf
 EndFunc
 
 Func OnCurrentUserUpdateHandler()
     $main_discordHasFinishSetup = True
+    ; Local $user = _Discord_UserManager_GetCurrentUser()
+    ; If $user = False Then
+        ; c("GetCurrentUser failed with $", 1, _Discord_GetErrorString(@error))
+    ; Else
+        ; c("User updated\n  Id: $\n  Username: $\n  Discriminator: $\n  Avatar: $\n  Bot: $", 1, $user[0], $user[1], $user[2], $user[3], $user[4])
+    ; EndIf
 EndFunc
 
 Func LogHookHandler($level, $msg)
-    c("Log: level $, $", 1, $level, $msg)
+    ; c("Log: level $, $", 1, $level, $msg)
 EndFunc
 
 Func ToggleBassSync()
