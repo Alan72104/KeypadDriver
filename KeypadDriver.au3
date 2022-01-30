@@ -34,10 +34,12 @@ Global $main_audioSyncTimer
 Global Const $main_bassLevelCap = 580
 Global $main_trayBtnExit, $main_trayBtnToggleBassSync
 Global $main_pressCount = 0
+Global $main_timeframeKeyCount = 0
+Global $main_historyQueue = Queue(1000, 0x7FFFFFFFFFFFFFFF)
+Global $main_maxKPS = 0
 Global $activity[18]
 Global $main_richPresenceUpdateTimer
 Global $main_discordHasFinishSetup = False
-
 SetGuiOpeningKey("{F4}")
 Opt("GUICloseOnESC", 0)
 Opt("TrayAutoPause", 0)
@@ -51,6 +53,7 @@ Func Main()
     _CommSetDllPath(@ScriptDir & "\Include\commg.dll")
     If FileExists($main_configPath) Then
         ConfigLoad($main_configPath)
+        $main_pressCount = Int(IniRead($main_configPath, "Statistics", "KeyPressCount", "0"))
     Else  ; Default bindings
         BindKey(1, "ESC")
         BindKey(2, "`")
@@ -89,18 +92,17 @@ Func Main()
     _Discord_UserManager_OnCurrentUserUpdate(OnCurrentUserUpdateHandler)
     Local $now = _Date_Time_GetSystemTime()
     Local $unixUtc = _DateDiff('s', "1970/01/01 00:00:00", _Date_Time_SystemTimeToDateTimeStr($now, 1))
-    $activity[3] = "Smashing keys"
-    $activity[4] = "0 keys pressed"
     $activity[5] = $unixUtc
     $activity[7] = "iconwithpadding"
-    $activity[8] = "All done from an Autoit script!"
+    $activity[8] = "Smashing keys"
     $activity[9] = "speed_silver"
-    $activity[10] = "Bruh"
-    ; It will not update RP and crash on exiting somehow if we didn't let it finish connecting
+    $activity[10] = "All done from an Autoit script!"
+    ; Sometime it still crashes on exiting
     Do
         _Discord_RunCallbacks()
     Until $main_discordHasFinishSetup
     
+    $main_lastPressTime = TimerInit()
     ; Local $t = 0
     ; Local $tt = 0
     While 1
@@ -116,11 +118,19 @@ Func Main()
                     SendKey(GetKeyDataNum(), GetKeyDataState())
                     If GetKeyDataState() = 1 Then
                         $main_pressCount += 1
+                        $main_timeframeKeyCount += 1
+                        QueuePush($main_historyQueue, TimerInit())
                     EndIf
                 EndIf
             ElseIf Not IsGuiOpened() And TimerDiff($main_slowPollingTimer) >= 60000 Then
                 If Not $main_audioSyncEnable Then Sleep(100)
             EndIf
+            
+            While $main_historyQueue[0] And TimerDiff(QueuePeak($main_historyQueue)) >= 2500
+                QueuePop($main_historyQueue, 0x7FFFFFFFFFFFFFFF)
+                $main_maxKPS = Max($main_maxKPS, $main_timeframeKeyCount / 2.5)
+                $main_timeframeKeyCount -= 1
+            WEnd
 
             If $main_audioSyncEnable And TimerDiff($main_audioSyncTimer) >= 1000 / 30 And $connectionStatus = $CONNECTED Then
                 $main_audioSyncTimer = TimerInit()
@@ -140,10 +150,10 @@ Func Main()
                         
             ; Debug loop time and loop frequency output
             ; If TimerDiff($tt) >= 1000 Then
-            ;     $tt = TimerInit()
-            ;     c($t)
-            ;     c($main_loopPeriod)
-            ;     $t = 0
+                ; $tt = TimerInit()
+                ; c($t)
+                ; c($main_loopPeriod)
+                ; $t = 0
             ; EndIf
             ; $t += 1
 
@@ -164,6 +174,7 @@ Func UpdateRP()
     EndIf
     $lastCount = $main_pressCount
     $activity[4] = $main_pressCount & " keys pressed"
+    $activity[3] = "max speed " & Round($main_maxKPS, 2) & " keys/second"
     _Discord_ActivityManager_UpdateActivity($activity, UpdateActivityHandler)
 EndFunc
 
@@ -231,6 +242,10 @@ Func Min($iNum1, $iNum2)
 	Return ($iNum1 > $iNum2) ? $iNum2 : $iNum1
 EndFunc
 
+Func Max($iNum1, $iNum2)
+	Return ($iNum1 < $iNum2) ? $iNum2 : $iNum1
+EndFunc
+
 Func Terminate()
     Exit
 EndFunc
@@ -238,4 +253,33 @@ EndFunc
 Func OnExit()
     CloseGui()
     DisableAudioSync()
+    IniWrite($main_configPath, "Statistics", "KeyPressCount", String($main_pressCount))
+EndFunc
+
+Func Queue($size, $n = 0)
+    Local $queue[$size + 3]
+    $queue[0] = 0 ; Count
+    $queue[1] = 3 ; Start
+    $queue[2] = $size
+    For $i = 3 To $size + 3 - 1
+        $queue[$i] = $n
+    Next
+    Return $queue
+EndFunc
+
+Func QueuePush(ByRef $q, $e)
+    $q[Mod($q[1] + $q[0] - 3, $q[2]) + 3] = $e
+    $q[0] += 1
+EndFunc
+
+Func QueuePop(ByRef $q, $n = 0)
+    ; Local $t = $q[$q[1]]
+    $q[$q[1]] = $n
+    $q[1] = Mod($q[1] - 2, $q[2]) + 3
+    $q[0] -= 1
+    ; Return $t
+EndFunc
+
+Func QueuePeak(ByRef $q)
+    Return $q[$q[1]]
 EndFunc

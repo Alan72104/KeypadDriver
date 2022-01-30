@@ -1,7 +1,7 @@
 ; ================================================================================
 ;
 ; KeypadDriver.Keys.au3
-; This file manages key mapping and abstracts the complexity of key sending
+; Manages key mapping
 ;
 ; ================================================================================
 

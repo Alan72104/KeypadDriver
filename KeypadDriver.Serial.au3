@@ -1,7 +1,7 @@
 ; ================================================================================
 ;
 ; KeypadDriver.Serial.au3
-; This file contains the functions required to communicate with the keypad
+; Functions required to communicate with the keypad
 ;
 ; ================================================================================
 
