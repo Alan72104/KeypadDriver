@@ -35,7 +35,7 @@ Global Const $main_bassLevelCap = 580
 Global $main_trayBtnExit, $main_trayBtnToggleBassSync
 Global $main_pressCount = 0
 Global $main_timeframeKeyCount = 0
-Global $main_historyQueue = Queue(1000, 0x7FFFFFFFFFFFFFFF)
+Global $main_historyQueue = Queue(50, 1.7976931348623157e+308)
 Global $main_maxKPS = 0
 Global $activity[18]
 Global $main_richPresenceUpdateTimer
@@ -68,9 +68,6 @@ Func Main()
         BindKey(11, "", "{LEFT}")
         BindKey(12, "", "{RIGHT}")
     EndIf
-    Sleep(200)
-    OpenGui()
-    Connect()
     If Not _DotNet_Load(@ScriptDir & "\Include\Dlls\SystemAudioWrapper.dll") Then
         Throw("Main", "Loading SystemAudioWrapper.dll failed! error: " & @error, "Terminating!")
         Terminate()
@@ -102,6 +99,9 @@ Func Main()
         _Discord_RunCallbacks()
     Until $main_discordHasFinishSetup
     
+    Connect()
+    OpenGui()
+    
     $main_lastPressTime = TimerInit()
     ; Local $t = 0
     ; Local $tt = 0
@@ -126,9 +126,9 @@ Func Main()
                 If Not $main_audioSyncEnable Then Sleep(100)
             EndIf
             
-            While $main_historyQueue[0] And TimerDiff(QueuePeak($main_historyQueue)) >= 2500
-                QueuePop($main_historyQueue, 0x7FFFFFFFFFFFFFFF)
-                $main_maxKPS = Max($main_maxKPS, $main_timeframeKeyCount / 2.5)
+            While $main_historyQueue[0] And TimerDiff(QueuePeak($main_historyQueue)) >= 300
+                QueuePop($main_historyQueue, 1.7976931348623157e+308)
+                $main_maxKPS = Max($main_maxKPS, $main_timeframeKeyCount / 3 * 10)
                 $main_timeframeKeyCount -= 1
             WEnd
 
