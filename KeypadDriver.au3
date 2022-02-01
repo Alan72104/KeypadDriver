@@ -35,7 +35,7 @@ Global Const $main_bassLevelCap = 580
 Global $main_trayBtnExit, $main_trayBtnToggleBassSync
 Global $main_pressCount = 0
 Global $main_timeframeKeyCount = 0
-Global $main_historyQueue = Queue(50, 1.7976931348623157e+308)
+Global $main_historyQueue = Queue(1000, 1.7976931348623157e+308)
 Global $main_maxKPS = 0
 Global $activity[18]
 Global $main_richPresenceUpdateTimer
