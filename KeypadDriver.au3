@@ -135,7 +135,7 @@ Func Main()
             If $main_audioSyncEnable And TimerDiff($main_audioSyncTimer) >= 1000 / 30 And $connectionStatus = $CONNECTED Then
                 $main_audioSyncTimer = TimerInit()
 	            Local $currentAudioLevel = $main_oBassLevel.GetBassLevel() * 50
-                SendMsgToKeypad($MSG_SETRGBBRIGHTNESS, Int(MIn($currentAudioLevel, $main_bassLevelCap) * ((255 * 1.5 / 4) / $main_bassLevelCap)))
+                SendMsgToKeypad($MSG_SETRGBBRIGHTNESS, Int(Min($currentAudioLevel, $main_bassLevelCap) * ((255 * 1.5 / 4) / $main_bassLevelCap)))
             EndIf
             
             If IsGuiOpened() Then
@@ -169,12 +169,16 @@ Main()
 
 Func UpdateRP()
     Local Static $lastCount = -1
-    If $lastCount = $main_pressCount Then
-        Return
-    EndIf
-    $lastCount = $main_pressCount
+    ; If $lastCount = $main_pressCount Then
+        ; Return
+    ; EndIf
+    ; $lastCount = $main_pressCount
     $activity[4] = $main_pressCount & " keys pressed"
-    $activity[3] = "max speed " & Round($main_maxKPS, 2) & " keys/second"
+    If $connectionStatus = $CONNECTED Then
+        $activity[3] = "max speed " & Round($main_maxKPS, 2) & " keys/second"
+    Else
+        $activity[3] = "keypad not connected"
+    EndIf
     _Discord_ActivityManager_UpdateActivity($activity, UpdateActivityHandler)
 EndFunc
 
