@@ -175,7 +175,11 @@ Func UpdateRP()
     ; $lastCount = $main_pressCount
     $activity[4] = $main_pressCount & " keys pressed"
     If $connectionStatus = $CONNECTED Then
-        $activity[3] = "max speed " & Round($main_maxKPS, 2) & " keys/second"
+        If TimerDiff($main_slowPollingTimer) >= 60000 Then
+            $activity[3] = "idle"
+        Else
+            $activity[3] = "max speed " & Round($main_maxKPS, 2) & " keys/second"
+        EndIf
     Else
         $activity[3] = "keypad not connected"
     EndIf
