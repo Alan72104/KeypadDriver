@@ -72,7 +72,7 @@ Func Main()
         Throw("Main", "Loading SystemAudioWrapper.dll failed! error: " & @error, "Terminating!")
         Terminate()
     EndIf
-    If Not _Discord_Init(935375293437337630, @ScriptDir & "\Include\Autoit-DiscordGameSDK\") Then
+    If Not _Discord_Init(935375293437337630, $DISCORD_CREATEFLAGS_DEFAULT, @ScriptDir & "\Include\Autoit-DiscordGameSDK\") Then
         Throw("Main", "Failed to init DiscordGameSDK!", @error, @extended)
         Terminate()
     EndIf

@@ -5,3 +5,5 @@ SystemAudioWrapper/.vs/
 SystemAudioWrapper/bin/
 SystemAudioWrapper/obj/
 SystemAudioWrapper/packages/
+discord_game_sdk.dll
+discord_game_sdk64.dll
