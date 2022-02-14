@@ -1,3 +1,4 @@
+#include-once
 #include <File.au3>
 
 Global Const $DOTNET_PATHS_INDEX = 0, $DOTNET_REGASM_OK = 0
