@@ -430,6 +430,12 @@ EndFunc
 
 Func __Discord_Dispose()
     OnAutoItExitUnRegister("__Discord_Dispose")
+    If $__Discord_apMethodPtrs[$__DISCORD_CORE] Then
+        DllCallAddress("none:cdecl", _
+                       DllStructGetData($__Discord_atMethodInterfaces[$__DISCORD_CORE], "Destroy"), _
+                       "ptr", $__Discord_apMethodPtrs[$__DISCORD_CORE])
+        $__Discord_apMethodPtrs[$__DISCORD_CORE] = 0
+    EndIf
     __Discord_AchievementManager_Dispose()
     __Discord_ActivityManager_Dispose()
     __Discord_ApplicationManager_Dispose()
@@ -442,18 +448,11 @@ Func __Discord_Dispose()
     __Discord_StoreManager_Dispose()
     __Discord_UserManager_Dispose()
     __Discord_VoiceManager_Dispose()
-    ; Local $timer = TimerInit()
-    ; While TimerDiff($timer) < 250
-        ; _Discord_RunCallbacks()
-    ; WEnd
-    If $__Discord_apMethodPtrs[$__DISCORD_CORE] Then
-        ; ConsoleWrite("Disposing Discord" & @CRLF)
-        DllCallAddress("none:cdecl", _
-                       DllStructGetData($__Discord_atMethodInterfaces[$__DISCORD_CORE], "Destroy"), _
-                       "ptr", $__Discord_apMethodPtrs[$__DISCORD_CORE])
-        ; ConsoleWrite("Disposing Completed" & @CRLF)
-        $__Discord_apMethodPtrs[$__DISCORD_CORE] = 0
-    EndIf
+    For $i = 0 To $__DISCORD_CLASSCOUNT - 1
+        $__Discord_atEventInterfaces[$i] = 0
+        $__Discord_atMethodInterfaces[$i] = 0
+        $__Discord_apMethodPtrs[$i] = 0
+    Next
     If $__Discord_hLogHookCallback Then
         DllCallbackFree($__Discord_hLogHookCallback)
         $__Discord_hLogHookCallback = 0
