@@ -84,7 +84,6 @@ Func Main()
     TraySetOnEvent($TRAY_EVENT_PRIMARYDOUBLE, "OpenGui")
     TraySetClick(8)
 
-    ; Less thing to run
     ; _Discord_SetLogHook($DISCORD_LOGLEVEL_DEBUG, LogHookHandler)
     _Discord_UserManager_OnCurrentUserUpdate(OnCurrentUserUpdateHandler)
     Local $now = _Date_Time_GetSystemTime()
@@ -94,10 +93,6 @@ Func Main()
     $activity[8] = "Smashing keys"
     $activity[9] = "speed_silver"
     $activity[10] = "All done from an Autoit script!"
-    ; Sometime it still crashes on exiting
-    Do
-        _Discord_RunCallbacks()
-    Until $main_discordHasFinishSetup
     
     Connect()
     OpenGui()
@@ -255,13 +250,10 @@ Func Max($iNum1, $iNum2)
 EndFunc
 
 Func Terminate()
-    Exit
-EndFunc
-
-Func OnExit()
     CloseGui()
     DisableAudioSync()
     IniWrite($main_configPath, "Statistics", "KeyPressCount", String($main_pressCount))
+    Exit
 EndFunc
 
 Func Queue($size, $n = 0)
