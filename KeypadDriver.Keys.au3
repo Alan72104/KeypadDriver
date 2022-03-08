@@ -8,11 +8,25 @@
 ; Todo: Better name for this module
 
 #include-once
+#include "Include\LibDebug.au3"
 #include "KeypadDriver.Vars.au3"
 #include "KeypadDriver.Gui.au3"
 
 ; [[keyStrokeUp, keyStrokeDown], ...]
 Global $keys_keyMap[$WIDTH * $HEIGHT][$keyStrokeAmount]
+Global $keys_currentProfile = "Main"
+BindKey(1, "ESC")
+BindKey(2, "`")
+BindKey(3, "c")
+BindKey(4, "", "!{UP}")
+BindKey(5, "", "^a")
+BindKey(6, "f")
+BindKey(7, "", "!{TAB}")
+BindKey(8, "", "!{DOWN}")
+BindKey(9, "r")
+BindKey(10, "t")
+BindKey(11, "", "{LEFT}")
+BindKey(12, "", "{RIGHT}")
 
 Func SendKey($num, $state)
     ; Only send the key stroke when the gui isn't opened
@@ -51,15 +65,28 @@ Func BindKey($num, $key, $extra = 0x0)
     EndSwitch
 EndFunc
 
-Func ConfigLoad($path)
+Func KeysGetProfile()
+    Return $keys_currentProfile
+EndFunc
+
+; Sets the current profile, assuming that profile exists in the config
+Func KeysSetProfile($path, $profile)
+    $keys_currentProfile = $profile
+    KeysLoadConfig($path)
+EndFunc
+
+; Loads config from a specific profile
+Func KeysLoadConfig($path, $profile = $keys_currentProfile)
     For $i = 1 To $WIDTH * $HEIGHT
-        BindKey($i, IniRead($path, "ButtonBindings", "Button" & $i & "Up", ""), IniRead($path, "ButtonBindings", "Button" & $i & "Down", ""))
+        BindKey($i, IniRead($path, iv("Profile_$_ButtonBindings", $profile), "Button" & $i & "Up", ""), _
+                    IniRead($path, iv("Profile_$_ButtonBindings", $profile), "Button" & $i & "Down", ""))
     Next
 EndFunc
 
-Func ConfigSave($path)
+; Saves current keymap to a specific profile
+Func KeysSaveConfig($path, $profile = $keys_currentProfile)
     For $i = 1 To $WIDTH * $HEIGHT
-        IniWrite($path, "ButtonBindings", "Button" & $i & "Up", GetKeybindingForKey($i, $KEYSTROKEUP))
-        IniWrite($path, "ButtonBindings", "Button" & $i & "Down", GetKeybindingForKey($i, $KEYSTROKEDOWN))
+        IniWrite($path, iv("Profile_$_ButtonBindings", $profile), "Button" & $i & "Up", GetKeybindingForKey($i, $KEYSTROKEUP))
+        IniWrite($path, iv("Profile_$_ButtonBindings", $profile), "Button" & $i & "Down", GetKeybindingForKey($i, $KEYSTROKEDOWN))
     Next
 EndFunc

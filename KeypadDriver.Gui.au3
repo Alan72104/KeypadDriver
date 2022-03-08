@@ -42,7 +42,7 @@ Global $gui_idCheckBoxBassSync
 
 Global $gui_idLabelConnection
 
-Global $gui_idButtonClose, $gui_idButtonSave, $gui_idButtonLoad
+Global $gui_idButtonClose, $gui_idComboProfile, $gui_idButtonNewProfile
 
 Global Enum $gui_UPDATERGBSTATE, $gui_GETRGBDATA, $gui_INCREASERGBBRIGHTNESS, $gui_DECREASERGBBRIGHTNESS, $gui_INCREASEEFFECTSPEED, $gui_DECREASEEFFECTSPEED
 
@@ -65,23 +65,22 @@ Func OnMsg()
             CloseGui()
             Terminate()
         
-        ; The "Save to config" button
-        Case $gui_idButtonSave
-            ConfigSave(GetConfigPath())
-        
-        ; The "Load config" button
-        Case $gui_idButtonLoad
-            DisableGuiTopmost()
-            Local $path = FileOpenDialog("Select a ini file", @ScriptDir, "Ini files (*.ini)", $FD_FILEMUSTEXIST + $FD_PATHMUSTEXIST)
-            If Not @error Then
-                Local $firstLine = FileReadLine($path)
-                If Not $firstLine == "[ButtonBindings]" Then
-                    Throw("OnMsg", "Please select a valid KeypadDriver config file!")
-                Else
-                    ConfigLoad($path)
-                EndIf
+        ; The profile selector
+        Case $gui_idComboProfile
+            Local $profile = GUICtrlRead($gui_idComboProfile)
+            ShowBindingGroup(False)
+            KeysSetProfile(GetConfigPath(), $profile)
+            UpdateBtnLabels()
+
+        ; The new profile button
+        Case $gui_idButtonNewProfile
+            Local $name = InputBox("Create a new keymap profile", "Enter the name of your new profile")
+            If $name <> "" Then
+                ShowBindingGroup(False)
+                GUICtrlSetData($gui_idComboProfile, $name, $name)
+                KeysSaveConfig(GetConfigPath(), $name)
+                KeysSetProfile(GetConfigPath(), $name)
             EndIf
-            EnableGuiTopmost()
         
         ; The binding action selectors
         Case $gui_idRadioBind
@@ -140,11 +139,13 @@ Func OnMsg()
             UpdateBtnLabels()
             $gui_isBindingKeys = False
             ShowBindingGroup(False)
+            KeysSaveConfig(GetConfigPath())
         
         ; The binding "Cancel" button, closes the "Binding" group
         Case $gui_idButtonCancel
             $gui_isBindingKeys = False
             ShowBindingGroup(False)
+            KeysSaveConfig(GetConfigPath())
         
         Case Else
             ; Handle the key buttons in for loop to get the button number
@@ -436,30 +437,30 @@ Func OpenGui()
     ; ^^^^^^^^^^^^^^^^^^^^^^^^^ Group monitoring ^^^^^^^^^^^^^^^^^^^^^^^^^
 
     $gui_idButtonEnableModifiedKeys = GUICtrlCreateButton("Enable modified keys", 750 - 50 - 15 - 100 - 15, _
-                                                                 ((30 + 15 + 15 + 25 * 1 + 15) + 15 + 15 + 15 + 25 * 1 + 15) + 15, _
-                                                                 130, 25)
+                                                          ((30 + 15 + 15 + 25 * 1 + 15) + 15 + 15 + 15 + 25 * 1 + 15) + 15, _
+                                                          130, 25)
         GUICtrlSetOnEvent($gui_idButtonEnableModifiedKeys, "OnMsg")
 
     $gui_idButtonDisableModifiedKeys = GUICtrlCreateButton("Disable modified keys", 750 - 50 - 15 - 100 - 15, _
-                                                                 ((30 + 15 + 15 + 25 * 1 + 15) + 15 + 15 + 15 + 25 * 1 + 15) + 15 + 25 + 5, _
-                                                                 130, 25)
+                                                           ((30 + 15 + 15 + 25 * 1 + 15) + 15 + 15 + 15 + 25 * 1 + 15) + 15 + 25 + 5, _
+                                                           130, 25)
         GUICtrlSetOnEvent($gui_idButtonDisableModifiedKeys, "OnMsg")
+
+    $gui_idComboProfile = GUICtrlCreateCombo("", 750 - 25 - 150 + 25, _
+                                                     500 - 25 - 25 - 25 - 5 - 25 - 5, _
+                                                     100, 25)
+        GUICtrlSetOnEvent($gui_idComboProfile, "OnMsg")
+    
+    $gui_idButtonNewProfile = GUICtrlCreateButton("New profile", 750 - 25 - 150 + 25, _
+                                                                 500 - 25 - 25 - 25 - 5, _
+                                                                 100, 25)
+        GUICtrlSetOnEvent($gui_idButtonNewProfile, "OnMsg")
 
     $gui_idButtonClose = GUICtrlCreateButton("Close the driver", 750 - 25 - 150, _
                                                                  500 - 25 - 25, _
                                                                  150, 25)
         GUICtrlSetOnEvent($gui_idButtonClose, "Terminate")
         GUICtrlSetColor($gui_idButtonClose, 0xFF0000)
-
-    $gui_idButtonSave = GUICtrlCreateButton("Save to config", 750 - 25 - 150 + 25, _
-                                                              500 - 25 - 25 - 25 - 5, _
-                                                              100, 25)
-        GUICtrlSetOnEvent($gui_idButtonSave, "OnMsg")
-    
-    $gui_idButtonLoad = GUICtrlCreateButton("Load config", 750 - 25 - 150 + 25, _
-                                                           500 - 25 - 25 - 25 - 5 - 25 - 5, _
-                                                           100, 25)
-        GUICtrlSetOnEvent($gui_idButtonLoad, "OnMsg")
     
     $gui_idLabelConnection = GUICtrlCreateLabel("", 50, 500 - 25 - 15, 500, 15)
         UpdateGui(True)  ; Update the connection label
@@ -468,6 +469,25 @@ Func OpenGui()
     $gui_isBindingKeys = False
     $gui_bindingAction = $gui_BIND
     $gui_monitoringType = $gui_MONITORRGB
+
+    ; Get avaliable profiles from the config
+    Local $profiles[1] = ["Main"]
+    Local $profilesString = ""
+    Local $sections = IniReadSectionNames(GetConfigPath())
+    For $i = 1 To $sections[0]
+        Local $separated = StringSplit($sections[$i], "_", $STR_NOCOUNT)
+        If $separated[0] = "Profile" Then
+            ; Small check for profiles with more than 1 sections
+            For $j = 0 To UBound($profiles) - 1
+                If $separated[1] = $profiles[$j] Then ContinueLoop
+            Next
+            ReDim $profiles[UBound($profiles) + 1]
+            $profiles[UBound($profiles) - 1] = $separated[1]
+            $profilesString &= $separated[1] & "|"
+        EndIf
+    Next
+    GUICtrlSetData($gui_idComboProfile, "")
+    GUICtrlSetData($gui_idComboProfile, $profilesString, KeysGetProfile())
     
     GUISetIcon($iconPath)
     ; Show the gui

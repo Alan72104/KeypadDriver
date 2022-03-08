@@ -2,6 +2,7 @@
 #AutoIt3Wrapper_Run_Au3Stripper=y
 #Au3Stripper_Parameters=/pe /sf /sv /rm
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
+#pragma compile(inputboxres, true)
 ; ================================================================================
 ;
 ; KeypadDriver.au3
@@ -37,7 +38,7 @@ Global $main_pressCount = 0
 Global $main_timeframeKeyCount = 0
 Global $main_historyQueue = Queue(1000, 1.7976931348623157e+308)
 Global $main_maxKPS = 0
-Global $activity[18]
+Global $main_activity[18]
 Global $main_richPresenceUpdateTimer
 Global $main_discordHasFinishSetup = False
 SetGuiOpeningKey("{F4}")
@@ -47,26 +48,16 @@ Opt("TrayMenuMode", 1)
 Opt("TrayOnEventMode", 1)
 TraySetIcon($iconPath)
 TraySetToolTip("Keypad Driver")
-OnAutoItExitRegister("OnExit")
 
 Func Main()
     _CommSetDllPath(@ScriptDir & "\Include\commg.dll")
     If FileExists($main_configPath) Then
-        ConfigLoad($main_configPath)
         $main_pressCount = Int(IniRead($main_configPath, "Statistics", "KeyPressCount", "0"))
-    Else  ; Default bindings
-        BindKey(1, "ESC")
-        BindKey(2, "`")
-        BindKey(3, "c")
-        BindKey(4, "", "!{UP}")
-        BindKey(5, "", "^a")
-        BindKey(6, "f")
-        BindKey(7, "", "!{TAB}")
-        BindKey(8, "", "!{DOWN}")
-        BindKey(9, "r")
-        BindKey(10, "t")
-        BindKey(11, "", "{LEFT}")
-        BindKey(12, "", "{RIGHT}")
+        KeysSetProfile($main_configPath, IniRead($main_configPath, "Main", "Profile", "Main"))
+    Else  ; Create default config
+        IniWrite($main_configPath, "Main", "Profile", "Main")
+        IniWrite($main_configPath, "Statistics", "KeyPressCount", 0)
+        KeysSaveConfig($main_configPath)
     EndIf
     If Not _DotNet_Load(@ScriptDir & "\Include\Dlls\SystemAudioWrapper.dll") Then
         Throw("Main", "Loading SystemAudioWrapper.dll failed! error: " & @error, "Terminating!")
@@ -88,11 +79,11 @@ Func Main()
     _Discord_UserManager_OnCurrentUserUpdate(OnCurrentUserUpdateHandler)
     Local $now = _Date_Time_GetSystemTime()
     Local $unixUtc = _DateDiff('s', "1970/01/01 00:00:00", _Date_Time_SystemTimeToDateTimeStr($now, 1))
-    $activity[5] = $unixUtc
-    $activity[7] = "iconwithpadding"
-    $activity[8] = "Smashing keys"
-    $activity[9] = "speed_silver"
-    $activity[10] = "All done from an Autoit script!"
+    $main_activity[5] = $unixUtc
+    $main_activity[7] = "iconwithpadding"
+    $main_activity[8] = "Smashing keys"
+    $main_activity[9] = "speed_silver"
+    $main_activity[10] = "Autoit gang gang"
     
     Connect()
     OpenGui()
@@ -168,17 +159,17 @@ Func UpdateRP()
         ; Return
     ; EndIf
     ; $lastCount = $main_pressCount
-    $activity[4] = $main_pressCount & " keys pressed"
+    $main_activity[4] = $main_pressCount & " keys pressed"
     If $connectionStatus = $CONNECTED Then
         If TimerDiff($main_slowPollingTimer) >= 60000 Then
-            $activity[3] = "idle"
+            $main_activity[3] = "idle"
         Else
-            $activity[3] = "max speed " & Round($main_maxKPS, 2) & " keys/second"
+            $main_activity[3] = "max speed " & Round($main_maxKPS, 2) & " keys/second"
         EndIf
     Else
-        $activity[3] = "keypad not connected"
+        $main_activity[3] = "keypad not connected"
     EndIf
-    _Discord_ActivityManager_UpdateActivity($activity, UpdateActivityHandler)
+    _Discord_ActivityManager_UpdateActivity($main_activity, UpdateActivityHandler)
 EndFunc
 
 Func UpdateActivityHandler($result)
@@ -253,6 +244,7 @@ Func Terminate()
     CloseGui()
     DisableAudioSync()
     IniWrite($main_configPath, "Statistics", "KeyPressCount", String($main_pressCount))
+    IniWrite($main_configPath, "Main", "Profile", KeysGetProfile())
     Exit
 EndFunc
 
