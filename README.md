@@ -4,6 +4,14 @@
 
 # KeypadDriver
 
-Driver and GUI written in Autoit for my own DIY keypad, driver and keypress events can be hooked outside for custom scripts
+- [Actual keypad](https://github.com/Alan72104/Arduino4x3keypad)
 
-- able to sync computer audio bass level to keypad brightness (uses an external c# DLL for faster processing, library used: NAudio)
+Driver and GUI written in Autoit for my own keypad, driver and keypress events can be hooked outside for custom scripts
+
+### Features
+
+- Able to sync computer audio bass level to keypad brightness (uses c# DLL and runtime for faster processing, library used: NAudio)
+
+### To improve
+
+- No scripting
