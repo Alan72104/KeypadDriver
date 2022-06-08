@@ -4,9 +4,9 @@
 
 # KeypadDriver
 
-- [Actual keypad](https://github.com/Alan72104/Arduino4x3keypad)
-
 Driver and GUI written in Autoit for my own keypad, driver and keypress events can be hooked outside for custom scripts
+
+- [Arduino4x3keypad](https://github.com/Alan72104/Arduino4x3keypad)
 
 ### Features
 
