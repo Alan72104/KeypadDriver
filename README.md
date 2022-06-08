@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="500" alt="Keypad logo" src="that.png">
+  <img width="750" alt="Keypad logo" src="that.png">
 </p>
 
 # KeypadDriver
