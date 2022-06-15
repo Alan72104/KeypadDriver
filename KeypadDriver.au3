@@ -41,6 +41,7 @@ Global $main_maxKPS = 0
 Global $main_activity[18]
 Global $main_richPresenceUpdateTimer
 Global $main_discordHasFinishSetup = False
+Global $main_comErrorHandler = ObjEvent("AutoIt.Error", "ComErrorHandler")
 SetGuiOpeningKey("{F4}")
 Opt("GUICloseOnESC", 0)
 Opt("TrayAutoPause", 0)
@@ -83,7 +84,7 @@ Func Main()
     $main_activity[7] = "iconwithpadding"
     $main_activity[8] = "Smashing keys"
     $main_activity[9] = "speed_silver"
-    $main_activity[10] = "Autoit gang gang"
+    $main_activity[10] = "Autoit on top"
     
     Connect()
     OpenGui()
@@ -207,8 +208,8 @@ Func EnableAudioSync()
         $main_audioSyncEnable = True
         $main_oBassLevel = ObjCreate("SystemAudioWrapper.SystemAudioBassLevel")
         If @error Then
-            Throw("Main", "Initializing SystemAudioBassLevel failed! error: " & @error, _
-                          "Terminating!")
+            Throw("EnableAudioSync", "Initializing SystemAudioBassLevel failed! error: " & @error, _
+                                     "Terminating!")
             Terminate()
         EndIf
         $main_oBassLevel.Start(4096, 2, 4)
@@ -232,12 +233,18 @@ Func IsBassSyncEnabled()
     Return $main_audioSyncEnable
 EndFunc
 
-Func Min($iNum1, $iNum2)
-	Return ($iNum1 > $iNum2) ? $iNum2 : $iNum1
-EndFunc
-
-Func Max($iNum1, $iNum2)
-	Return ($iNum1 < $iNum2) ? $iNum2 : $iNum1
+Func ComErrorHandler($oError)
+    Throw("ComErrorHandler", c("COM Error occurred on line $!", 1, $oError.scriptline), _
+                             c("    number        : 0x" & Hex($oError.number)), _
+                             c("    windescription: " & StringStripWS($oError.windescription, $STR_STRIPLEADING + $STR_STRIPTRAILING)), _
+                             c("    description   : " & $oError.description), _
+                             c("    source        : " & $oError.source), _
+                             c("    helpfile      : " & $oError.helpfile), _
+                             c("    helpcontext   : " & $oError.helpcontext), _
+                             c("    lastdllerror  : " & $oError.lastdllerror), _
+                             c("    scriptline    : " & $oError.scriptline), _
+                             c("    retcode       : 0x" & Hex($oError.retcode)))
+    Terminate()
 EndFunc
 
 Func Terminate()
@@ -247,6 +254,8 @@ Func Terminate()
     IniWrite($main_configPath, "Main", "Profile", KeysGetProfile())
     Exit
 EndFunc
+
+; Utils
 
 Func Queue($size, $n = 0)
     Local $queue[$size + 3]
@@ -274,4 +283,12 @@ EndFunc
 
 Func QueuePeak(ByRef $q)
     Return $q[$q[1]]
+EndFunc
+
+Func Min($iNum1, $iNum2)
+	Return ($iNum1 > $iNum2) ? $iNum2 : $iNum1
+EndFunc
+
+Func Max($iNum1, $iNum2)
+	Return ($iNum1 < $iNum2) ? $iNum2 : $iNum1
 EndFunc
